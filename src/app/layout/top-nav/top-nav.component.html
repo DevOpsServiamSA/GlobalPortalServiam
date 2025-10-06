@@ -1,0 +1,84 @@
+<header class="bg-theme-surface dark:bg-serviam-dark-surface text-theme-primary dark:text-serviam-dark-text px-4 py-3 flex justify-between items-center shadow border-b border-theme-border dark:border-serviam-dark-border">
+  <!-- Botón de menú para colapsar side-nav -->
+  <button (click)="toggleSidenav.emit()" mat-icon-button class="text-theme-primary dark:text-serviam-dark-text md:hidden">
+    <mat-icon>menu</mat-icon>
+  </button>
+
+  <div class="flex items-center gap-2">
+    <img src="assets/images/isotipo.svg" alt="Isotipo Serviam" class="h-8" />
+    <span class="font-semibold text-theme-primary dark:text-serviam-dark-text">Mesa de Ayuda</span>
+  </div>
+
+  <!-- Información del usuario -->
+  <div class="flex items-center space-x-3 relative" *ngIf="currentUser">
+    <!-- Botón de toggle de tema -->
+    <button 
+      (click)="toggleTheme()" 
+      mat-icon-button 
+      class="text-theme-primary dark:text-serviam-dark-text hover:bg-theme-primary hover:bg-opacity-10 dark:hover:bg-serviam-dark-card transition-colors"
+      [matTooltip]="isDarkMode ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
+    >
+      <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+
+    <div class="hidden sm:block text-right">
+      <div class="text-theme-primary dark:text-serviam-dark-text font-medium">{{ currentUser.usuarioLogin }}</div>
+      <div class="text-xs text-theme-secondary dark:text-serviam-dark-text-secondary">{{ getRoleDisplayName(currentUser.roles) }}</div>
+    </div>
+    
+    <!-- Botón de usuario con menú desplegable -->
+    <div class="relative">
+      <button 
+        (click)="toggleUserMenu()" 
+        class="flex items-center space-x-2 text-theme-primary dark:text-serviam-dark-text hover:bg-theme-primary hover:bg-opacity-10 dark:hover:bg-serviam-dark-card rounded-full p-2 transition-colors"
+      >
+        <mat-icon class="text-theme-primary dark:text-serviam-dark-text">account_circle</mat-icon>
+        <mat-icon class="text-theme-primary dark:text-serviam-dark-text text-sm">keyboard_arrow_down</mat-icon>
+      </button>
+
+      <!-- Menú desplegable -->
+      <div 
+        *ngIf="showUserMenu" 
+        class="absolute right-0 top-12 bg-theme-surface dark:bg-serviam-dark-card rounded-lg shadow-lg py-2 w-48 z-50 border border-theme-border dark:border-serviam-dark-border"
+        (clickOutside)="closeUserMenu()"
+      >
+        <div class="px-4 py-2 border-b border-theme-border dark:border-serviam-dark-border">
+          <div class="font-medium text-theme-primary dark:text-serviam-dark-text">{{ currentUser.usuarioLogin }}</div>
+          <div class="text-sm text-theme-secondary dark:text-serviam-dark-text-secondary">{{ currentUser.email }}</div>
+          <div class="text-xs text-serviam-primary dark:text-serviam-dark-primary">{{ getRoleDisplayName(currentUser.roles) }}</div>
+        </div>
+        
+        <div class="py-1">
+          <button 
+            (click)="toggleTheme()" 
+            class="w-full text-left px-4 py-2 text-theme-primary dark:text-serviam-dark-text hover:bg-theme-bg dark:hover:bg-serviam-dark-surface flex items-center space-x-2"
+          >
+            <mat-icon class="text-theme-secondary dark:text-serviam-dark-text-secondary text-sm">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+            <span>{{ isDarkMode ? 'Tema Claro' : 'Tema Oscuro' }}</span>
+          </button>
+          <button 
+            (click)="onLogout()" 
+            class="w-full text-left px-4 py-2 text-theme-primary dark:text-serviam-dark-text hover:bg-theme-bg dark:hover:bg-serviam-dark-surface flex items-center space-x-2"
+          >
+            <mat-icon class="text-theme-secondary dark:text-serviam-dark-text-secondary text-sm">logout</mat-icon>
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mostrar login si no hay usuario -->
+  <div *ngIf="!currentUser" class="flex items-center space-x-3">
+    <!-- Botón de toggle de tema para usuarios no autenticados -->
+    <button 
+      (click)="toggleTheme()" 
+      mat-icon-button 
+      class="text-theme-primary dark:text-serviam-dark-text hover:bg-theme-primary hover:bg-opacity-10 dark:hover:bg-serviam-dark-card transition-colors"
+      [matTooltip]="isDarkMode ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
+    >
+      <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+    <span class="text-theme-primary dark:text-serviam-dark-text">No autenticado</span>
+  </div>
+</header>

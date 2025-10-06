@@ -1,0 +1,54 @@
+<aside class="bg-serviam-primary dark:bg-serviam-dark-surface text-white h-full flex flex-col items-center transition-all duration-300 relative"
+  [class.w-64]="!collapsed" [class.w-20]="collapsed">
+
+  <!-- Logo + Botón colapsar (superior) -->
+  <div class="w-full flex items-center justify-between p-4">
+    <img *ngIf="!collapsed" src="assets/images/logo-horizontal_blanco.svg" alt="Logo" class="h-10" />
+
+    <!-- Botón de colapsar al lado del logo -->
+    <button (click)="toggleCollapse()"
+      class="bg-white dark:bg-serviam-dark-card text-serviam-primary dark:text-serviam-dark-primary rounded-full p-1 shadow hover:bg-gray-100 dark:hover:bg-serviam-dark-border transition" *ngIf="!collapsed">
+      <mat-icon class="text-2xl">chevron_left</mat-icon>
+    </button>
+    <button (click)="toggleCollapse()"
+      class="bg-white dark:bg-serviam-dark-card text-serviam-primary dark:text-serviam-dark-primary rounded-full p-1 shadow hover:bg-gray-100 dark:hover:bg-serviam-dark-border transition" *ngIf="collapsed">
+      <mat-icon class="text-lg">chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <nav class="flex flex-col items-center w-full mt-4 space-y-2 ">
+    <ng-container *ngFor="let item of menuItems; let i = index">
+      <!-- Ítem sin hijos -->
+      <a *ngIf="!item.children" [routerLink]="item.route" matTooltip="{{ item.tooltip }}" matTooltipPosition="right"
+        class="flex items-center space-x-2 w-full px-4 py-2 hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded"
+        (click)="onNavigationClick()">
+        <mat-icon>{{ item.icon }}</mat-icon>
+        <span *ngIf="!collapsed">{{ item.label }}</span>
+      </a>
+
+      <!-- Ítem con submenú -->
+      <div *ngIf="item.children" class="w-full">
+        <button (click)="toggleSubmenu(i)"
+          class="flex items-center justify-between w-full px-4 py-2 hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded"
+          matTooltip="{{ item.tooltip }}" matTooltipPosition="right">
+          <div class="flex items-center space-x-2">
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <span *ngIf="!collapsed">{{ item.label }}</span>
+          </div>
+          <mat-icon *ngIf="!collapsed">{{ submenuOpen[i] ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+
+        <!-- Submenú desplegable -->
+        <div *ngIf="submenuOpen[i]" class="pl-12 transition-all duration-300 space-y-1" [class.hidden]="collapsed">
+          <a *ngFor="let sub of item.children" [routerLink]="sub.route"
+            class="block text-sm text-white dark:text-serviam-dark-text hover:underline"
+            (click)="onNavigationClick()">
+            <mat-icon class="mr-1 text-sm">{{ sub.icon }}</mat-icon>
+            {{ sub.label }}
+          </a>
+        </div>
+      </div>
+    </ng-container>
+  </nav>
+
+</aside>

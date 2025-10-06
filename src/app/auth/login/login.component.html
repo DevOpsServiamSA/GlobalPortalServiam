@@ -1,0 +1,61 @@
+<div class="flex justify-center items-center h-screen bg-theme-bg dark:bg-serviam-dark-bg">
+  <div class="bg-theme-surface dark:bg-serviam-dark-card shadow-md p-8 rounded w-96 border border-theme-border dark:border-serviam-dark-border">
+    <h2 class="text-xl font-semibold mb-6 text-center text-serviam-primary dark:text-serviam-dark-primary">Mesa de Ayuda - Login</h2>
+
+    <!-- Mostrar mensaje de error -->
+    <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 rounded">
+      {{ errorMessage }}
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <!-- Usuario -->
+      <div class="mb-4">
+        <label class="block mb-1 text-theme-primary dark:text-serviam-dark-text">Usuario</label>
+        <input
+          formControlName="usuarioLogin"
+          type="text"
+          placeholder="Ingrese su usuario"
+          class="w-full border border-theme-border dark:border-serviam-dark-border bg-theme-surface dark:bg-serviam-dark-surface text-theme-primary dark:text-serviam-dark-text px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-serviam-primary dark:focus:ring-serviam-dark-primary"
+          [class.border-red-500]="usuarioLogin?.invalid && usuarioLogin?.touched"
+        />
+        <div *ngIf="usuarioLogin?.invalid && usuarioLogin?.touched" class="text-sm text-red-500 dark:text-red-400 mt-1">
+          <span *ngIf="usuarioLogin?.errors?.['required']">El usuario es requerido.</span>
+          <span *ngIf="usuarioLogin?.errors?.['minlength']">El usuario debe tener al menos 3 caracteres.</span>
+        </div>
+      </div>
+
+      <!-- Contraseña -->
+      <div class="mb-6">
+        <label class="block mb-1 text-theme-primary dark:text-serviam-dark-text">Contraseña</label>
+        <input
+          formControlName="password"
+          type="password"
+          placeholder="Ingrese su contraseña"
+          class="w-full border border-theme-border dark:border-serviam-dark-border bg-theme-surface dark:bg-serviam-dark-surface text-theme-primary dark:text-serviam-dark-text px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-serviam-primary dark:focus:ring-serviam-dark-primary"
+          [class.border-red-500]="password?.invalid && password?.touched"
+        />
+        <div *ngIf="password?.invalid && password?.touched" class="text-sm text-red-500 dark:text-red-400 mt-1">
+          <span *ngIf="password?.errors?.['required']">La contraseña es requerida.</span>
+          <span *ngIf="password?.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres.</span>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="loginForm.invalid || loading"
+        class="w-full bg-serviam-primary dark:bg-serviam-dark-primary text-white py-2 rounded hover:bg-serviam-secondary dark:hover:bg-serviam-dark-secondary transition disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span *ngIf="loading" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+        {{ loading ? 'Iniciando sesión...' : 'Ingresar' }}
+      </button>
+    </form>
+
+    <!-- Información de usuarios de prueba (solo en desarrollo) -->
+    <div class="mt-6 p-3 bg-theme-bg dark:bg-serviam-dark-surface rounded text-xs text-theme-secondary dark:text-serviam-dark-text-secondary border border-theme-border dark:border-serviam-dark-border">
+      <p class="font-semibold mb-1">Usuarios de prueba:</p>
+      <p>• <strong>paranda</strong> (Administrador)</p>
+      <p>• <strong>consultor</strong> (Consultor)</p>
+      <p>• <strong>usuario</strong> (Usuario)</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,254 @@
+/* Animaciones personalizadas */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-enter {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Hover effects para las tarjetas */
+.ticket-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.ticket-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Efecto de pulso para el loading */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Estilos para badges responsivos */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-priority-alta {
+  @apply bg-red-100 text-red-800 border border-red-200;
+}
+
+.badge-priority-media {
+  @apply bg-yellow-100 text-yellow-800 border border-yellow-200;
+}
+
+.badge-priority-baja {
+  @apply bg-green-100 text-green-800 border border-green-200;
+}
+
+.badge-estado-ingresado {
+  @apply bg-blue-100 text-blue-800 border border-blue-200;
+}
+
+.badge-estado-asignado {
+  @apply bg-indigo-100 text-indigo-800 border border-indigo-200;
+}
+
+.badge-estado-desarrollo {
+  @apply bg-orange-100 text-orange-800 border border-orange-200;
+}
+
+.badge-estado-finalizado {
+  @apply bg-green-100 text-green-800 border border-green-200;
+}
+
+/* Mejoras para móviles */
+@media (max-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .card-content {
+    padding: 0.75rem;
+  }
+  
+  .card-header {
+    padding: 0.75rem;
+  }
+  
+  .text-responsive {
+    font-size: 0.875rem;
+  }
+}
+
+/* Estilos para el estado de carga */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Mejoras para accesibilidad */
+.ticket-card:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.btn-primary:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Transiciones suaves */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Estilos específicos para el tema Serviam */
+.serviam-gradient {
+  background: linear-gradient(135deg, var(--serviam-primary, #1e40af) 0%, var(--serviam-secondary, #3b82f6) 100%);
+}
+
+.serviam-text-gradient {
+  background: linear-gradient(135deg, var(--serviam-primary, #1e40af) 0%, var(--serviam-secondary, #3b82f6) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Responsive grid mejorado */
+.responsive-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+@media (max-width: 640px) {
+  .responsive-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+/* Estilos para la vista en tabla */
+.table-responsive {
+  min-width: 800px;
+}
+
+/* Contenedor de tabla con scroll horizontal interno únicamente */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.table-container table {
+  min-width: 800px;
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Anchos específicos para columnas de la tabla */
+.table-container table th:nth-child(1) { width: 10px; }   /* ID */
+.table-container table th:nth-child(2) { width: 130px; }  /* Usuario */
+.table-container table th:nth-child(3) { width: 100px; }  /* Empresa */
+.table-container table th:nth-child(4) { width: 100px; }  /* Estado */
+.table-container table th:nth-child(5) { width: 90px; }   /* Prioridad */
+.table-container table th:nth-child(6) { width: 130px; }  /* Usuario Responsable */
+.table-container table th:nth-child(7) { width: 110px; }  /* Categoría */
+.table-container table th:nth-child(8) { width: 100px; }  /* Fecha */
+.table-container table th:nth-child(9) { width: 120px; }  /* Acciones */
+
+/* Wrapper que previene scroll horizontal global */
+.dashboard-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Mejorar legibilidad en tabla */
+.table-row-hover:hover {
+  background-color: #f8fafc;
+}
+
+/* Estilos para el toggle de vista */
+.view-toggle {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+}
+
+.view-toggle-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.view-toggle-button.active {
+  background: white;
+  color: var(--serviam-primary, #1e40af);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.view-toggle-button:not(.active) {
+  color: #6b7280;
+}
+
+.view-toggle-button:not(.active):hover {
+  color: #374151;
+}
+
+/* Responsive para tabla en móviles */
+@media (max-width: 768px) {
+  .table-responsive {
+    min-width: 100%;
+  }
+  
+  .table-mobile-hidden {
+    display: none;
+  }
+  
+  /* Hacer que las celdas se comporten mejor en móvil */
+  .table-cell-compact {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}

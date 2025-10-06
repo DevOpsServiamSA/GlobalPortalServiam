@@ -1,0 +1,322 @@
+<div class="min-h-screen bg-gray-50 py-6">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Mensaje de acceso denegado -->
+    <div *ngIf="accessDenied" class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+      <div class="flex items-center">
+        <svg class="w-6 h-6 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 18.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>
+        <div>
+          <h3 class="text-lg font-semibold text-red-800">Acceso Denegado</h3>
+          <p class="text-red-700 mt-1">No tienes permisos para editar tickets. Solo los administradores pueden acceder a esta funcionalidad.</p>
+          <button 
+            (click)="onCancel()"
+            class="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+            Volver al Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div *ngIf="!accessDenied" class="bg-white shadow rounded-lg mb-6">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold text-gray-900">Editar Ticket</h1>
+            <p class="mt-1 text-sm text-gray-600" *ngIf="ticket">
+              Ticket #{{ ticket.idTicket }} - {{ ticket.estado }}
+            </p>
+          </div>
+          <button 
+            type="button"
+            (click)="onCancel()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-serviam-primary">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="!accessDenied && loading" class="bg-white shadow rounded-lg">
+      <div class="px-6 py-12 text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-serviam-primary mx-auto"></div>
+        <p class="mt-4 text-gray-600">Cargando datos del ticket...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!accessDenied && error && !loading" class="bg-red-50 border border-red-200 rounded-lg p-6">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.684-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>
+        <div>
+          <h3 class="text-sm font-medium text-red-800">Error</h3>
+          <p class="mt-1 text-sm text-red-700">{{ errorMessage }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form *ngIf="!accessDenied && !loading && !error && ticket" [formGroup]="editForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Información Actual del Ticket -->
+      <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-medium text-gray-900">Información Actual</h2>
+        </div>
+        <div class="px-6 py-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-500">Usuario Afectado</label>
+              <p class="mt-1 text-sm text-gray-900">{{ ticket.usuarioAfectado }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500">Usuario Responsable</label>
+              <p class="mt-1 text-sm text-gray-900">{{ ticket.usuarioResponsable }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500">Empresa</label>
+              <p class="mt-1 text-sm text-gray-900">{{ ticket.nombreEmpresa }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500">Prioridad</label>
+              <p class="mt-1 text-sm text-gray-900">{{ ticket.prioridad }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500">Estado</label>
+              <p class="mt-1 text-sm text-gray-900">{{ ticket.estado }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500">Categorías</label>
+              <p class="mt-1 text-sm text-gray-900">{{ ticket.categorias || 'Sin categorías' }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500">Nivel de Atención</label>
+              <p class="mt-1 text-sm text-gray-900">{{ ticket.nivelAtencion }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500">Localidad</label>
+              <p class="mt-1 text-sm text-gray-900">{{ ticket.localidad }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500">SLA</label>
+              <p class="mt-1 text-sm text-gray-900">{{ ticket.sla }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de Edición -->
+      <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-medium text-gray-900">Datos a Modificar</h2>
+          <p class="mt-1 text-sm text-gray-600">Solo los campos completados serán actualizados</p>
+        </div>
+        <div class="px-6 py-6 space-y-6">
+          <!-- Empresa -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Empresa</label>
+            <select 
+              formControlName="idEmpresa"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent">
+              <option *ngFor="let empresa of empresas" [value]="empresa.idEmpresa">
+                {{ empresa.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Categorías -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Categorías</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Categoría 1</label>
+                <select 
+                  formControlName="idCategoria1"
+                  (change)="onCategoria1Change()"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent">
+                  <option value="">Seleccionar categoría</option>
+                  <option *ngFor="let categoria of categorias1" [value]="categoria.idCategoria">
+                    {{ categoria.nombre }}
+                  </option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Categoría 2</label>
+                <select 
+                  formControlName="idCategoria2"
+                  (change)="onCategoria2Change()"
+                  [disabled]="!categorias2.length"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent disabled:bg-gray-100">
+                  <option value="">Seleccionar categoría</option>
+                  <option *ngFor="let categoria of categorias2" [value]="categoria.idCategoria">
+                    {{ categoria.nombre }}
+                  </option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Categoría 3</label>
+                <select 
+                  formControlName="idCategoria3"
+                  [disabled]="!categorias3.length"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent disabled:bg-gray-100">
+                  <option value="">Seleccionar categoría</option>
+                  <option *ngFor="let categoria of categorias3" [value]="categoria.idCategoria">
+                    {{ categoria.nombre }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Prioridad y Estado -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad</label>
+              <select 
+                formControlName="idPrioridad"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent">
+                <option *ngFor="let prioridad of prioridades" [value]="prioridad.idPrioridad">
+                  {{ prioridad.descripcion }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+              <select 
+                formControlName="estado"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent">
+                <option *ngFor="let estado of estadosTicket" [value]="estado.idEstadoTicket">
+                  {{ estado.nombreEstado }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Nivel de Atención y Localidad -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Nivel de Atención</label>
+              <select 
+                formControlName="idNivelAtencion"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent">
+                <option *ngFor="let nivel of nivelesAtencion" [value]="nivel.idNivelAtencion">
+                  {{ nivel.nombreNivel }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Localidad</label>
+              <select 
+                formControlName="idLocalidad"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent">
+                <option *ngFor="let localidad of localidades" [value]="localidad.idDepartamento">
+                  {{ localidad.departamento }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- SLA -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">SLA</label>
+            <select 
+              formControlName="idSla"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent">
+              <option *ngFor="let sla of slas" [value]="sla.idSLA">
+                {{ sla.tiempoRespuesta }}min / {{ sla.tiempoResolucion }}min - {{ sla.nivelCriticidad }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Detalle del Evento -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Detalle del Evento</label>
+            <textarea 
+              formControlName="detalleEvento"
+              rows="4"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent"
+              placeholder="Modifica la descripción del evento..."></textarea>
+          </div>
+
+          <!-- Usuarios -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Usuario Afectado</label>
+              <select 
+                formControlName="idUsuarioAfectado"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent">
+                <option *ngFor="let empleado of empleados" [value]="empleado.idEmpleado">
+                  {{ empleado.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Usuario Responsable</label>
+              <select 
+                formControlName="idUsuarioResponsable"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent">
+                <option *ngFor="let resolutor of resolutores" [value]="resolutor.idEmpleado">
+                  {{ resolutor.nombre }} - {{ resolutor.departamento }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Resolutor Actual -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Resolutor Actual</label>
+            <select 
+              formControlName="idResolutorActual"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent">
+              <option *ngFor="let resolutor of resolutores" [value]="resolutor.idEmpleado">
+                {{ resolutor.nombre }} - {{ resolutor.departamento }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-500">
+              <p>Los campos se inicializan con los valores actuales del ticket</p>
+            </div>
+            <div class="flex space-x-3">
+              <button 
+                type="button"
+                (click)="onCancel()"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-serviam-primary">
+                Cancelar
+              </button>
+              <button 
+                type="submit"
+                [disabled]="saving || !puedeEditar()"
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-serviam-primary hover:bg-serviam-secondary disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-serviam-primary">
+                <svg *ngIf="saving" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {{ saving ? 'Guardando...' : 'Guardar Cambios' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+    
+  </div>
+</div>

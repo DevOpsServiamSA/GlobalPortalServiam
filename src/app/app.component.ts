@@ -1,12 +1,19 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { ThemeService } from './layout/services/theme.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css'],
+  standalone: false
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'GlobalPortalServiam';
+
+  constructor(private themeService: ThemeService) {}
+
+  ngOnInit(): void {
+    // El ThemeService se inicializa automáticamente en su constructor
+    // Esto asegura que el tema se aplique desde el inicio
+  }
 }

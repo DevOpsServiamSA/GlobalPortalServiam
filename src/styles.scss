@@ -1,0 +1,43 @@
+/* You can add global styles to this file, and also import other style files */
+@use './themes.scss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Custom Properties for Theme Variables */
+:root {
+  /* Light theme variables */
+  --bg-primary: #F5F5F5;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #252525;
+  --text-secondary: #666666;
+  --border-color: #e0e0e0;
+}
+
+.dark {
+  /* Dark theme variables */
+  --bg-primary: #1a1a1a;
+  --bg-surface: #2d2d2d;
+  --bg-card: #3a3a3a;
+  --text-primary: #e5e5e5;
+  --text-secondary: #b3b3b3;
+  --border-color: #4a4a4a;
+}
+
+html, body { 
+  height: 100%; 
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body { 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

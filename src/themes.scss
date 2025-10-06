@@ -1,0 +1,113 @@
+@use '@angular/material' as mat;
+
+// Required Material core styles
+@include mat.core();
+
+// Define Serviam color palettes
+$serviam-primary: (
+  50: #e3f2fd,
+  100: #bbdefb,
+  200: #90caf9,
+  300: #64b5f6,
+  400: #42a5f5,
+  500: #00699C,
+  600: #1e88e5,
+  700: #1976d2,
+  800: #1565c0,
+  900: #0d47a1,
+  A100: #82b1ff,
+  A200: #448aff,
+  A400: #2979ff,
+  A700: #2962ff,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+    A100: rgba(black, 0.87),
+    A200: white,
+    A400: white,
+    A700: white,
+  )
+);
+
+$serviam-accent: (
+  50: #e0f7fa,
+  100: #b2ebf2,
+  200: #80deea,
+  300: #4dd0e1,
+  400: #26c6da,
+  500: #1EB8D8,
+  600: #00acc1,
+  700: #0097a7,
+  800: #00838f,
+  900: #006064,
+  A100: #84ffff,
+  A200: #18ffff,
+  A400: #00e5ff,
+  A700: #00b8d4,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+    A100: rgba(black, 0.87),
+    A200: rgba(black, 0.87),
+    A400: rgba(black, 0.87),
+    A700: white,
+  )
+);
+
+// Define el tema claro
+// Define el tema claro
+$serviam-light-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$blue-palette,  // Usar paleta estándar
+    tertiary: mat.$cyan-palette, // Paleta para "accent"
+  ),
+  typography: (
+    brand-family: 'Roboto',
+    bold-weight: 700,
+  ),
+  density: (
+    scale: 0,
+  ),
+));
+
+// Define el tema oscuro
+$serviam-dark-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: mat.$blue-palette,
+    tertiary: mat.$cyan-palette,
+  ),
+  typography: (
+    brand-family: 'Roboto',
+    bold-weight: 700,
+  ),
+  density: (
+    scale: 0,
+  ),
+));
+
+// Aplicar temas dentro de selectores CSS (CORRECCIÓN CLAVE)
+:root {
+  @include mat.theme($serviam-light-theme);
+}
+
+.dark {
+  @include mat.theme($serviam-dark-theme);
+}

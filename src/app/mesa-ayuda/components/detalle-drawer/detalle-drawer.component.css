@@ -1,0 +1,46 @@
+/* Animaciones para el drawer */
+.drawer-overlay {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.drawer-panel {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Scroll personalizado para el contenido del drawer */
+.drawer-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.drawer-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.drawer-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.drawer-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Estilos para los estados de carga */
+.loading-spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--serviam-primary);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Asegurar que el drawer esté por encima de otros elementos */
+.drawer-container {
+  z-index: 9999;
+}

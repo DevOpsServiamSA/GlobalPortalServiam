@@ -1,0 +1,44 @@
+/* Estilos específicos para el componente editar-ticket */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Estilos para estados de formulario */
+.form-field-error {
+  @apply border-red-300 focus:border-red-500 focus:ring-red-500;
+}
+
+.form-field-success {
+  @apply border-green-300 focus:border-green-500 focus:ring-green-500;
+}
+
+/* Estilos para dropdowns deshabilitados */
+select:disabled {
+  @apply bg-gray-100 cursor-not-allowed;
+}
+
+/* Estilos para mejorar la legibilidad */
+.info-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+}
+
+.info-item {
+  @apply flex flex-col;
+}
+
+.info-label {
+  @apply text-sm font-medium text-gray-500 mb-1;
+}
+
+.info-value {
+  @apply text-sm text-gray-900;
+}
