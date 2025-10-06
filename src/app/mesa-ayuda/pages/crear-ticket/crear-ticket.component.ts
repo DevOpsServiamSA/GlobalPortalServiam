@@ -19,8 +19,6 @@ import {
 } from '../../models';
 import { LocalidadService } from '../../services/localidad.service';
 import { PrioridadService } from '../../services/prioridad.service';
-import { SlaService } from '../../services/sla.service'
-import { NivelAtencionService } from '../../services/nivelAtencion.service';
 import {EmpleadoService} from '../../services/empleado.service';
 
 @Component({
@@ -43,11 +41,8 @@ export class CrearTicketComponent implements OnInit {
   proyectos: ProyectoPorEmpresaDto[] = [];
   prioridades: PrioridadDto[] = [] ;
   localidades: LocalidadDto[] = [];
-  //slaOptions = ['4 horas', '8 horas', '24 horas', '48 horas', '72 horas'];
-  slaOptions: SlaDto[] = [];
   usuariosResponsablesOptions: ResolutorDto[] = [];
   usuariosAfectadosOptions: EmpleadoDto[] = [];
-  nivelesAtencion: nivelAtencionDto[] = [];
   
   // Autocomplete observables
   filteredUsuariosResponsables!: Observable<ResolutorDto[]>;
@@ -66,8 +61,6 @@ export class CrearTicketComponent implements OnInit {
     private categoriaService: CategoriaService,
     private localidadService: LocalidadService,
     private prioridadService: PrioridadService,
-    private slaService: SlaService,
-    private nivelAtencionService: NivelAtencionService,
     private empleadoService: EmpleadoService,
   ) {
     this.ticketForm = this.fb.group({
@@ -78,10 +71,8 @@ export class CrearTicketComponent implements OnInit {
       categoria2: [''],
       categoria3: [''],
       proyectoId: [''],
-      sla: ['', Validators.required],
       prioridad: ['', Validators.required],
       localidad: ['', Validators.required],
-      nivelAtencion: ['', Validators.required],
       detalleEvento: ['', [Validators.required, Validators.minLength(10)]]
     });
   }
@@ -99,8 +90,6 @@ export class CrearTicketComponent implements OnInit {
       categorias: this.categoriaService.obtenerCategorias(),
       localidades: this.localidadService.obtenerLocalidades(),
       prioridades: this.prioridadService.obtenerTipoDePrioridades(),
-      slaOptions: this.slaService.obtenerSLAs(),
-      nivelesAtencion: this.nivelAtencionService.obtenerNivelesAtencion(),
       usuariosAfectadosOptions: this.empleadoService.obtenerEmpleados(),
       usuariosResponsablesOptions: this.empleadoService.obtenerResolutores()
     }).subscribe({
@@ -109,13 +98,12 @@ export class CrearTicketComponent implements OnInit {
         this.categorias = data.categorias;
         this.localidades = data.localidades;
         this.prioridades = data.prioridades;
-        this.slaOptions = data.slaOptions;
-        this.nivelesAtencion = data.nivelesAtencion;
         this.usuariosAfectadosOptions = data.usuariosAfectadosOptions;
         this.usuariosResponsablesOptions = data.usuariosResponsablesOptions;
 
         // Filtrar categorías por tipo
         this.categoriasNivel1 = this.categorias.filter(c => c.tipo === 'P');
+        this.categoriasNivel2 = this.categorias.filter(c => c.tipo === 'T');
         
         // Cargar datos dummy para nuevos campos
         //this.cargarUsuariosResponsablesDummy();
@@ -134,26 +122,25 @@ export class CrearTicketComponent implements OnInit {
   }
 
   configurarCambiosCategoria(): void {
-    // Cuando cambia categoria nivel 1
+    // Cuando cambia categoria nivel 1 (Principal) - No filtra nada
     this.ticketForm.get('categoria1')?.valueChanges.subscribe(categoriaId => {
-      console.log(categoriaId, this.categorias)
+      // La categoría principal no afecta el filtrado de las demás
+      // Solo limpiamos los valores si se cambia
       if (categoriaId) {
-        this.categoriasNivel2 = this.categorias.filter(c => 
-          c.tipo === 'S' && c.idCategoriaPadre === parseInt(categoriaId)
-        );
         this.ticketForm.patchValue({ categoria2: '', categoria3: '' });
         this.categoriasNivel3 = [];
       }
-      console.log(categoriaId, this.categoriasNivel2)
-
     });
 
-    // Cuando cambia categoria nivel 2
+    // Cuando cambia categoria nivel 2 (Tipo) - Filtra categoria nivel 3 (Subtipo)
     this.ticketForm.get('categoria2')?.valueChanges.subscribe(categoriaId => {
       if (categoriaId) {
-        this.categoriasNivel3 = this.categorias.filter(c => 
-          c.tipo === 'T' && c.idCategoriaPadre === parseInt(categoriaId)
+        this.categoriasNivel3 = this.categorias.filter(c =>
+          c.tipo === 'S' && c.idCategoriaPadre === parseInt(categoriaId)
         );
+        this.ticketForm.patchValue({ categoria3: '' });
+      } else {
+        this.categoriasNivel3 = [];
         this.ticketForm.patchValue({ categoria3: '' });
       }
     });
@@ -226,12 +213,9 @@ export class CrearTicketComponent implements OnInit {
         idCategoria2: parseInt(this.ticketForm.value.categoria2) || null,
         idCategoria3: parseInt(this.ticketForm.value.categoria3) || null,
         idProyecto: this.ticketForm.value.proyectoId || null,
-        idSLA: parseInt(this.ticketForm.value.sla) || null,
         idPrioridad: parseInt(this.ticketForm.value.prioridad),
         idLocalidad: this.ticketForm.value.localidad,
         IdCanal: 1, // Canal fijo para creación manual
-        //categorias: this.obtenerCategoriasSeleccionadas(),
-        idNivelAtencion: parseInt(this.ticketForm.value.nivelAtencion),
         detalleEvento: this.ticketForm.value.detalleEvento,
         estado: 'A' // Estado ASIGNADO para tickets creados manualmente
       };

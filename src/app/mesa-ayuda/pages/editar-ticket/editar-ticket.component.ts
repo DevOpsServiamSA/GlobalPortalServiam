@@ -6,12 +6,10 @@ import { takeUntil } from 'rxjs/operators';
 import { TicketService } from '../../services/ticket.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { CategoriaService } from '../../services/categoria.service';
-import { NivelAtencionService } from '../../services/nivelAtencion.service';
 import { EstadoTicketService } from '../../services/estadoTicket.service';
 import { EmpresaService } from '../../services/empresa.service';
 import { PrioridadService } from '../../services/prioridad.service';
 import { LocalidadService } from '../../services/localidad.service';
-import { SlaService } from '../../services/sla.service';
 import { EmpleadoService } from '../../services/empleado.service';
 import { 
   TicketDetalleDto, 
@@ -53,11 +51,9 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
   categorias1: Categoria[] = [];
   categorias2: Categoria[] = [];
   categorias3: Categoria[] = [];
-  nivelesAtencion: nivelAtencionDto[] = [];
   estadosTicket: EstadoTicketDto[] = [];
   prioridades: PrioridadDto[] = [];
   localidades: LocalidadDto[] = [];
-  slas: SlaDto[] = [];
   empleados: EmpleadoDto[] = [];
   resolutores: ResolutorDto[] = [];
 
@@ -68,12 +64,10 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
     private ticketService: TicketService,
     private authService: AuthService,
     private categoriaService: CategoriaService,
-    private nivelAtencionService: NivelAtencionService,
     private estadoTicketService: EstadoTicketService,
     private empresaService: EmpresaService,
     private prioridadService: PrioridadService,
     private localidadService: LocalidadService,
-    private slaService: SlaService,
     private empleadoService: EmpleadoService
   ) {
     this.editForm = this.fb.group({
@@ -81,14 +75,12 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
       idUsuarioAfectado: [''],
       idResolutorActual: [''],
       idEmpresa: [''],
-      idSla: [''],
       idCanal: [''],
       idCategoria1: [''],
       idCategoria2: [''],
       idCategoria3: [''],
       idProyecto: [''],
       idPrioridad: [''],
-      idNivelAtencion: [''],
       idLocalidad: [''],
       detalleEvento: [''],
       estado: ['']
@@ -124,11 +116,9 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
       this.cargarTicket(),
       this.cargarEmpresas(),
       this.cargarCategorias(),
-      this.cargarNivelesAtencion(),
       this.cargarEstadosTicket(),
       this.cargarPrioridades(),
       this.cargarLocalidades(),
-      this.cargarSlas(),
       this.cargarEmpleados(),
       this.cargarResolutores()
     ];
@@ -192,23 +182,6 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
     });
   }
 
-  private cargarNivelesAtencion(): Promise<void> {
-    return new Promise((resolve) => {
-      this.nivelAtencionService.obtenerNivelesAtencion()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (niveles) => {
-            this.nivelesAtencion = niveles;
-            resolve();
-          },
-          error: (err: any) => {
-            console.error('Error al cargar niveles de atención:', err);
-            resolve();
-          }
-        });
-    });
-  }
-
   private cargarEstadosTicket(): Promise<void> {
     return new Promise((resolve) => {
       this.estadoTicketService.obtenerEstadosTicket()
@@ -260,23 +233,6 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
     });
   }
 
-  private cargarSlas(): Promise<void> {
-    return new Promise((resolve) => {
-      this.slaService.obtenerSLAs()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (slas: SlaDto[]) => {
-            this.slas = slas;
-            resolve();
-          },
-          error: (err: any) => {
-            console.error('Error al cargar SLAs:', err);
-            resolve();
-          }
-        });
-    });
-  }
-
   private inicializarFormulario(): void {
     if (!this.ticket) return;
 
@@ -294,12 +250,10 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
       idUsuarioAfectado: this.ticket.idUsuarioAfectado,
       idResolutorActual: this.ticket.idResolutorActual,
       idEmpresa: this.ticket.idEmpresa,
-      idSla: this.ticket.idSLA,
       idCategoria1: this.ticket.idCategoria1,
       idCategoria2: this.ticket.idCategoria2,
       idCategoria3: this.ticket.idCategoria3,
       idPrioridad: this.ticket.nivelPrioridad,
-      idNivelAtencion: this.ticket.idNivelAtencion,
       idLocalidad: this.ticket.idLocalidad,
       detalleEvento: this.ticket.detalleEvento,
       estado: this.ticket.idEstadoTicket

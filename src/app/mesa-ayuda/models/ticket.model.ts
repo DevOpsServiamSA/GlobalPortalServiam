@@ -100,7 +100,6 @@ export interface EditTicketDto {
   idUsuarioAfectado?: string;
   idResolutorActual?: string;
   idEmpresa?: number;
-  idSla?: number;
   idCanal?: number;
   idCategoria1?: string;
   idCategoria2?: string;
