@@ -298,6 +298,35 @@ export class DashboardComponent implements OnInit {
     this.selectedTicketId = null;
   }
 
+  /**
+   * Formatea minutos a formato legible (horas o días)
+   * @param minutos - Tiempo en minutos como string
+   * @returns Formato legible (Ej: "4h", "3d", "2d 12h")
+   */
+  formatearTiempo(minutos: string): string {
+    if (!minutos) return '-';
+
+    const mins = parseInt(minutos, 10);
+    if (isNaN(mins)) return '-';
+
+    // Menos de 60 minutos
+    if (mins < 60) {
+      return `${mins}min`;
+    }
+
+    // Menos de 24 horas (1440 minutos)
+    if (mins < 1440) {
+      const horas = Math.floor(mins / 60);
+      const minutosRestantes = mins % 60;
+      return minutosRestantes > 0 ? `${horas}h ${minutosRestantes}min` : `${horas}h`;
+    }
+
+    // 24 horas o más
+    const dias = Math.floor(mins / 1440);
+    const horasRestantes = Math.floor((mins % 1440) / 60);
+    return horasRestantes > 0 ? `${dias}d ${horasRestantes}h` : `${dias}d`;
+  }
+
   // Método para actualizar la lista cuando se modifica un ticket en el drawer
   actualizarListaTickets(): void {
     this.cargarTickets();

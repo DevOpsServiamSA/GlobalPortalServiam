@@ -41,8 +41,13 @@ export class CrearTicketComponent implements OnInit {
   proyectos: ProyectoPorEmpresaDto[] = [];
   prioridades: PrioridadDto[] = [] ;
   localidades: LocalidadDto[] = [];
+  // Copia total y lista filtrada de localidades
+  todasLocalidades: LocalidadDto[] = [];
+  localidadesFiltradas: LocalidadDto[] = [];
   usuariosResponsablesOptions: ResolutorDto[] = [];
   usuariosAfectadosOptions: EmpleadoDto[] = [];
+  // Lista completa para filtrar por empresa
+  todosUsuariosAfectados: EmpleadoDto[] = [];
   
   // Autocomplete observables
   filteredUsuariosResponsables!: Observable<ResolutorDto[]>;
@@ -96,9 +101,12 @@ export class CrearTicketComponent implements OnInit {
       next: (data) => {
         this.empresas = data.empresas;
         this.categorias = data.categorias;
-        this.localidades = data.localidades;
+        this.todasLocalidades = data.localidades;
+        this.localidadesFiltradas = [];
         this.prioridades = data.prioridades;
-        this.usuariosAfectadosOptions = data.usuariosAfectadosOptions;
+        // Guardar todos los empleados y dejar vacío hasta seleccionar empresa
+        this.todosUsuariosAfectados = data.usuariosAfectadosOptions;
+        this.usuariosAfectadosOptions = [];
         this.usuariosResponsablesOptions = data.usuariosResponsablesOptions;
 
         // Filtrar categorías por tipo
@@ -145,12 +153,64 @@ export class CrearTicketComponent implements OnInit {
       }
     });
 
-    // Cuando cambia la empresa, cargar proyectos
+    // Cuando cambia la empresa, cargar proyectos y filtrar usuarios afectados
     this.ticketForm.get('empresaId')?.valueChanges.subscribe(empresaId => {
       if (empresaId) {
-        this.cargarProyectos(empresaId);
+        const empresaIdNum = typeof empresaId === 'string' ? parseInt(empresaId, 10) : empresaId;
+        this.cargarProyectos(empresaIdNum);
+
+        const empresaSeleccionada = this.empresas.find(e => e.idEmpresa === empresaIdNum);
+        const razon = empresaSeleccionada?.razonSocial || '';
+        this.usuariosAfectadosOptions = this.todosUsuariosAfectados.filter(u => u.rucEmpresa === razon);
+
+        // Limpiar selección si no pertenece al filtro actual
+        const actual = this.ticketForm.get('usuarioAfectado')?.value;
+        if (!actual || !this.usuariosAfectadosOptions.some(u => u.idEmpleado === actual?.idEmpleado)) {
+          this.ticketForm.patchValue({ usuarioAfectado: '' });
+        }
+
+        // Filtrar localidades según empresa y usuario afectado
+        this.filtrarLocalidades();
+      } else {
+        // Sin empresa seleccionada, no mostrar usuarios afectados
+        this.usuariosAfectadosOptions = [];
+        this.ticketForm.patchValue({ usuarioAfectado: '' });
+        // Limpiar localidades
+        this.localidadesFiltradas = [];
+        this.ticketForm.patchValue({ localidad: '' });
       }
     });
+
+    // Cuando cambia el usuario afectado, filtrar localidades
+    this.ticketForm.get('usuarioAfectado')?.valueChanges.subscribe(() => {
+      this.filtrarLocalidades();
+    });
+  }
+
+  private filtrarLocalidades(): void {
+    const empresaId = this.ticketForm.get('empresaId')?.value;
+    const usuarioAfectado = this.ticketForm.get('usuarioAfectado')?.value as EmpleadoDto | string | null;
+
+    if (!empresaId || !usuarioAfectado || typeof usuarioAfectado === 'string' || !usuarioAfectado.idDepartamento) {
+      this.localidadesFiltradas = [];
+      this.ticketForm.patchValue({ localidad: '' });
+      return;
+    }
+
+    const empresaIdNum = typeof empresaId === 'string' ? parseInt(empresaId, 10) : empresaId;
+    const empresaSeleccionada = this.empresas.find(e => e.idEmpresa === empresaIdNum);
+    const nombreEmpresa = empresaSeleccionada?.nombre || '';
+    const idDepartamentoEmpleado = usuarioAfectado.idDepartamento;
+
+    this.localidadesFiltradas = this.todasLocalidades.filter(l =>
+      l.empresaOrigen === nombreEmpresa && l.idDepartamento === idDepartamentoEmpleado
+    );
+
+    // Si la selección actual de localidad no está en el filtro, limpiar
+    const localidadActual = this.ticketForm.get('localidad')?.value;
+    if (!this.localidadesFiltradas.some(l => l.idDepartamento === localidadActual)) {
+      this.ticketForm.patchValue({ localidad: '' });
+    }
   }
 
   cargarProyectos(empresaId: number): void {

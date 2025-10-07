@@ -13,6 +13,8 @@ export interface TicketDashboardDto {
   nivelAtencion: string;
   localidad: string;
   sla: string;
+  tiempoRecomendadoRespuesta: string;
+  tiempoRecomendadoResolucion: string;
   estado: string;
   fechaCreacion: string;
   proyecto?: string;
@@ -41,6 +43,8 @@ export interface TicketDetalleDto {
   idNivelAtencion: number;
   sla: string;
   idSLA: number;
+  tiempoRecomendadoRespuesta: string;
+  tiempoRecomendadoResolucion: string;
   estado: string;
   idEstadoTicket: string;
   detalleEvento: string;
@@ -63,6 +67,7 @@ export interface LineaTrabajoDto {
   tiempoProyectado: number; // Tiempo estimado para la línea
   tiempoReal?: number; // Tiempo real que tomó completar la línea
   nivel: string;
+  idResolutor?: string; // ID del resolutor de la línea
   nombreResolutor: string;
   areaResolutor?: string;
   // ACTUALIZADO: Estado por ID numérico y nombre descriptivo
@@ -142,13 +147,13 @@ export enum EstadoTicket {
   PRUEBAS = 'P',
   FINALIZADO = 'F',
   CERRADO = 'C',
-  DESACTIVADO = 'X'
+  DESACTIVADO = 'X',
 }
 
 export enum PrioridadTicket {
   ALTA = 'Alta',
   MEDIA = 'Media',
-  BAJA = 'Baja'
+  BAJA = 'Baja',
 }
 
 // NUEVOS: Interfaces para funcionalidades adicionales de líneas
@@ -174,7 +179,7 @@ export enum CanalTicket {
   EMAIL = 'Email',
   TELEFONO = 'Teléfono',
   PRESENCIAL = 'Presencial',
-  PORTAL = 'Portal'
+  PORTAL = 'Portal',
 }
 
 // NUEVO: Interface para estados de línea de ticket
@@ -203,7 +208,8 @@ export interface PaginatedResponse<T> {
   hasPreviousPage: boolean;
 }
 
-export interface TicketDashboardPaginatedDto extends PaginatedResponse<TicketDashboardDto> {}
+export interface TicketDashboardPaginatedDto
+  extends PaginatedResponse<TicketDashboardDto> {}
 
 // Parámetros de filtros para el dashboard
 export interface DashboardFilters extends PaginationRequest {

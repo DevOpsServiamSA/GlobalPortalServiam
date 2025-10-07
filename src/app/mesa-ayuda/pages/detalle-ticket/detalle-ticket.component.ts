@@ -74,6 +74,7 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
 
     this.finalizarLineaForm = this.fb.group({
       tiempoReal: ['', [Validators.required, Validators.min(0.1)]],
+      idEstadoLinea: ['', Validators.required],
       resolucion: ['', Validators.required]
     });
   }
@@ -334,6 +335,13 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
       });
   }
 
+  // Getter para filtrar solo estados de finalización
+  get estadosFinalizacion(): EstadoTicketLineaDto[] {
+    return this.estadosTicketLinea.filter(e =>
+      [3, 4, 5].includes(e.idEstadoLinea) && e.activo
+    );
+  }
+
   // Métodos para manejar archivos
   onArchivosSeleccionados(event: Event): void {
     const target = event.target as HTMLInputElement;
@@ -352,6 +360,35 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  /**
+   * Formatea minutos a formato legible (horas o días)
+   * @param minutos - Tiempo en minutos como string
+   * @returns Formato legible (Ej: "4h", "3d", "2d 12h")
+   */
+  formatearTiempo(minutos: string): string {
+    if (!minutos) return '-';
+
+    const mins = parseInt(minutos, 10);
+    if (isNaN(mins)) return '-';
+
+    // Menos de 60 minutos
+    if (mins < 60) {
+      return `${mins}min`;
+    }
+
+    // Menos de 24 horas (1440 minutos)
+    if (mins < 1440) {
+      const horas = Math.floor(mins / 60);
+      const minutosRestantes = mins % 60;
+      return minutosRestantes > 0 ? `${horas}h ${minutosRestantes}min` : `${horas}h`;
+    }
+
+    // 24 horas o más
+    const dias = Math.floor(mins / 1440);
+    const horasRestantes = Math.floor((mins % 1440) / 60);
+    return horasRestantes > 0 ? `${dias}d ${horasRestantes}h` : `${dias}d`;
   }
 
   // Métodos para manejar categorías
@@ -500,19 +537,9 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
     }
 
     // Verificar estado de las líneas usando la misma lógica que todasLineasFinalizadas()
+    const estadosFinalizados = ['RESUELTO', 'CANCELADO', 'ESCALADO'];
     const lineasNoFinalizadas = this.ticket.lineasTrabajo.filter(linea =>
-      // Si NO cumple ninguna de las condiciones de finalización
-      !(
-        // Validaciones para nuevos campos del backend
-        linea.idEstadoLinea === 6 ||
-        linea.nombreEstadoLinea === 'FINALIZADO' ||
-        (linea.tiempoReal !== undefined && linea.tiempoReal !== null) ||
-
-        // Validaciones para campos actuales del JSON
-        linea.estado === 'FINALIZADO' ||
-        (linea.tiempoHoras !== undefined && linea.tiempoHoras > 0) ||
-        linea.fechaFinalizacion
-      )
+      !estadosFinalizados.includes(linea.estado)
     );
 
     if (lineasNoFinalizadas.length > 0) {
@@ -531,16 +558,10 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
       return false;
     }
 
+    // Estados que indican que una línea está finalizada
+    const estadosFinalizados = ['RESUELTO', 'CANCELADO', 'ESCALADO'];
     return this.ticket.lineasTrabajo.every(linea =>
-      // Validaciones para nuevos campos del backend
-      linea.idEstadoLinea === 6 ||
-      linea.nombreEstadoLinea === 'FINALIZADO' ||
-      (linea.tiempoReal !== undefined && linea.tiempoReal !== null) ||
-
-      // Validaciones para campos actuales del JSON
-      linea.estado === 'FINALIZADO' ||
-      (linea.tiempoHoras !== undefined && linea.tiempoHoras > 0) ||
-      linea.fechaFinalizacion
+      estadosFinalizados.includes(linea.estado)
     );
   }
 
@@ -549,16 +570,9 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
     if (!this.currentUser || !linea) return false;
 
     // Solo mostrar botón si la línea no está finalizada
-    const estaFinalizada =
-      // Validaciones para nuevos campos del backend
-      linea.tiempoReal ||
-      linea.idEstadoLinea === 6 ||
-      linea.nombreEstadoLinea === 'FINALIZADO' ||
-
-      // Validaciones para campos actuales del JSON
-      linea.estado === 'FINALIZADO' ||
-      (linea.tiempoHoras !== undefined && linea.tiempoHoras > 0) ||
-      linea.fechaFinalizacion;
+    // Estados que indican que una línea está finalizada
+    const estadosFinalizados = ['RESUELTO', 'CANCELADO', 'ESCALADO'];
+    const estaFinalizada = estadosFinalizados.includes(linea.estado);
 
     if (estaFinalizada) return false;
 
@@ -570,10 +584,19 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
       return tieneRolValido;
     }
 
-    // Los consultores solo pueden finalizar líneas donde son resolutores
-    const esResolutorLinea = linea.nombreResolutor &&
-                            this.currentUser.nombreCompleto &&
-                            linea.nombreResolutor.toLowerCase().includes(this.currentUser.nombreCompleto.toLowerCase());
+    // Los consultores pueden finalizar líneas donde son resolutores
+    // Intentar validar por ID primero, luego por nombre como fallback
+    let esResolutorLinea = false;
+
+    // Validación por ID (más confiable)
+    if (linea.idResolutor && this.currentUser.codigoEmpleado) {
+      esResolutorLinea = linea.idResolutor === this.currentUser.codigoEmpleado;
+    }
+
+    // Fallback: Validación por nombre si no hay ID o no coincidió
+    if (!esResolutorLinea && linea.nombreResolutor && this.currentUser.nombreCompleto) {
+      esResolutorLinea = linea.nombreResolutor.toLowerCase().includes(this.currentUser.nombreCompleto.toLowerCase());
+    }
 
     return tieneRolValido && esResolutorLinea;
   }
@@ -585,6 +608,7 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
     // Resetear formulario
     this.finalizarLineaForm.reset({
       tiempoReal: '',
+      idEstadoLinea: '',
       resolucion: ''
     });
   }
@@ -600,6 +624,7 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
       this.loadingAction = true;
 
       const tiempoReal = parseFloat(this.finalizarLineaForm.value.tiempoReal);
+      const idEstadoLinea = parseInt(this.finalizarLineaForm.value.idEstadoLinea);
       const resolucion = this.finalizarLineaForm.value.resolucion;
 
       // Obtener el ID de línea, preferiblemente idTicketLinea
@@ -611,7 +636,15 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
         idTicketLinea = this.lineaSeleccionada.nroLinea;
       }
 
-      this.ticketService.finalizarLineaConTiempoReal(idTicketLinea, tiempoReal, resolucion)
+      // Usar actualizarLinea directamente con todos los campos
+      const actualizarDto = {
+        idTicketLinea,
+        idEstadoLinea,
+        tiempoReal,
+        resolucion
+      };
+
+      this.ticketService.actualizarLinea(actualizarDto)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {

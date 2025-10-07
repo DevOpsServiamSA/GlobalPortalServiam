@@ -2,6 +2,7 @@ export interface EmpleadoDto {
   idEmpleado: string;
   nombre: string;
   rucEmpresa: string;
+  idDepartamento: string;
 }
 
 export interface ResolutorDto {
