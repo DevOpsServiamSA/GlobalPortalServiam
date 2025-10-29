@@ -26,8 +26,8 @@
         <span *ngIf="!collapsed">{{ item.label }}</span>
       </a>
 
-      <!-- Ítem con submenú -->
-      <div *ngIf="item.children" class="w-full">
+      <!-- Ítem con submenú (normal) -->
+      <div *ngIf="item.children && item.label !== 'Administración'" class="w-full">
         <button (click)="toggleSubmenu(i)"
           class="flex items-center justify-between w-full px-4 py-2 hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded"
           matTooltip="{{ item.tooltip }}" matTooltipPosition="right">
@@ -48,6 +48,31 @@
           </a>
         </div>
       </div>
+
+      <!-- Ítem con submenú (solo para Administradores) -->
+      <ng-container *hasRole="'administrador'">
+        <div *ngIf="item.children && item.label === 'Administración'" class="w-full">
+          <button (click)="toggleSubmenu(i)"
+            class="flex items-center justify-between w-full px-4 py-2 hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded"
+            matTooltip="{{ item.tooltip }}" matTooltipPosition="right">
+            <div class="flex items-center space-x-2">
+              <mat-icon>{{ item.icon }}</mat-icon>
+              <span *ngIf="!collapsed">{{ item.label }}</span>
+            </div>
+            <mat-icon *ngIf="!collapsed">{{ submenuOpen[i] ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+
+          <!-- Submenú desplegable -->
+          <div *ngIf="submenuOpen[i]" class="pl-12 transition-all duration-300 space-y-1" [class.hidden]="collapsed">
+            <a *ngFor="let sub of item.children" [routerLink]="sub.route"
+              class="block text-sm text-white dark:text-serviam-dark-text hover:underline"
+              (click)="onNavigationClick()">
+              <mat-icon class="mr-1 text-sm">{{ sub.icon }}</mat-icon>
+              {{ sub.label }}
+            </a>
+          </div>
+        </div>
+      </ng-container>
     </ng-container>
   </nav>
 

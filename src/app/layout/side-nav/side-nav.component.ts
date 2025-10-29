@@ -27,6 +27,14 @@ menuItems: MenuItem[] = [
       { label: 'Tickets', icon: 'confirmation_number', route: '/mesa-ayuda' },
       { label: 'Nuevo ticket', icon: 'add_circle', route: '/mesa-ayuda/nuevo' }
     ]
+  },
+  {
+    label: 'Administración',
+    icon: 'settings',
+    tooltip: 'Administración',
+    children: [
+      { label: 'Categorías', icon: 'category', route: '/mesa-ayuda/mantenedor-categorias' }
+    ]
   }
 ];
 

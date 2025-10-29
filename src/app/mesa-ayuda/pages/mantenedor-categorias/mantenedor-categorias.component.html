@@ -1,0 +1,519 @@
+<div class="min-h-screen bg-serviam-background dark:bg-serviam-dark-bg p-6">
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-serviam-dark-text">
+          Mantenedor de Categorías
+        </h1>
+        <p class="text-sm text-gray-600 dark:text-serviam-dark-text-secondary mt-1">
+          Gestiona la jerarquía de categorías: Principal → Tipo → Sub
+        </p>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          (click)="toggleExpandAll()"
+          class="px-4 py-2 bg-white dark:bg-serviam-dark-card border border-gray-300 dark:border-serviam-dark-border
+                 text-gray-700 dark:text-serviam-dark-text rounded-lg hover:bg-gray-50 dark:hover:bg-serviam-dark-surface
+                 transition-colors duration-200 flex items-center gap-2"
+        >
+          <span class="material-icons text-lg">{{ expandAll ? 'unfold_less' : 'unfold_more' }}</span>
+          {{ expandAll ? 'Contraer todo' : 'Expandir todo' }}
+        </button>
+
+        <button
+          (click)="openCreatePanel()"
+          class="px-6 py-2 bg-serviam-primary dark:bg-serviam-dark-primary text-white rounded-lg
+                 hover:bg-serviam-primary/90 dark:hover:bg-serviam-dark-primary/90
+                 transition-all duration-200 flex items-center gap-2 shadow-md"
+        >
+          <span class="material-icons">add</span>
+          Nueva Categoría
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notificaciones -->
+  <div class="mb-4">
+    <div
+      *ngIf="successMessage"
+      class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800
+             text-green-800 dark:text-green-300 px-4 py-3 rounded-lg flex items-center gap-2"
+    >
+      <span class="material-icons">check_circle</span>
+      <span>{{ successMessage }}</span>
+    </div>
+
+    <div
+      *ngIf="errorMessage"
+      class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800
+             text-red-800 dark:text-red-300 px-4 py-3 rounded-lg flex items-center gap-2"
+    >
+      <span class="material-icons">error</span>
+      <span>{{ errorMessage }}</span>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading && categorias.length === 0" class="flex justify-center items-center py-20">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-serviam-primary dark:border-serviam-dark-primary"></div>
+  </div>
+
+  <!-- Árbol de Categorías -->
+  <div *ngIf="!loading || categorias.length > 0" class="bg-white dark:bg-serviam-dark-card rounded-lg shadow-md p-6">
+    <div *ngIf="categoriasTree.length === 0" class="text-center py-12">
+      <span class="material-icons text-6xl text-gray-300 dark:text-gray-600 mb-4">folder_open</span>
+      <p class="text-gray-500 dark:text-gray-400 text-lg">No hay categorías creadas</p>
+      <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">Haz clic en "Nueva Categoría" para comenzar</p>
+    </div>
+
+    <!-- Nivel Principal -->
+    <div *ngFor="let principal of categoriasTree" class="mb-2">
+      <!-- Categoría Principal -->
+      <div
+        class="flex items-center justify-between p-4 rounded-lg border-2
+               {{ getTipoBgColor(principal.tipo) }}
+               border-serviam-primary dark:border-serviam-dark-primary
+               hover:shadow-md transition-all duration-200"
+      >
+        <div class="flex items-center gap-3 flex-1">
+          <!-- Botón expandir/contraer -->
+          <button
+            *ngIf="principal.subcategorias && principal.subcategorias.length > 0"
+            (click)="toggleExpand(principal)"
+            class="text-gray-500 dark:text-gray-400 hover:text-serviam-primary dark:hover:text-serviam-dark-primary
+                   transition-colors"
+          >
+            <span class="material-icons">
+              {{ principal.expanded ? 'expand_more' : 'chevron_right' }}
+            </span>
+          </button>
+          <span *ngIf="!principal.subcategorias || principal.subcategorias.length === 0" class="w-6"></span>
+
+          <!-- Icono y nombre -->
+          <span class="material-icons {{ getTipoColor(principal.tipo) }}">
+            {{ getTipoInfo(principal.tipo).icon }}
+          </span>
+
+          <div class="flex-1">
+            <span class="font-semibold text-gray-800 dark:text-serviam-dark-text text-lg">
+              {{ principal.nombre }}
+            </span>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-xs px-2 py-0.5 rounded-full {{ getTipoBgColor(principal.tipo) }} {{ getTipoColor(principal.tipo) }} font-medium">
+                {{ getTipoInfo(principal.tipo).label }}
+              </span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                ID: {{ principal.idCategoria }}
+              </span>
+              <span *ngIf="principal.subcategorias && principal.subcategorias.length > 0"
+                    class="text-xs text-gray-500 dark:text-gray-400">
+                • {{ principal.subcategorias.length }} subcategoría(s)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex gap-2">
+          <button
+            (click)="openEditPanel(principal)"
+            class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20
+                   rounded-lg transition-colors"
+            title="Editar"
+          >
+            <span class="material-icons text-xl">edit</span>
+          </button>
+          <button
+            (click)="deleteCategoria(principal)"
+            class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20
+                   rounded-lg transition-colors"
+            title="Eliminar"
+          >
+            <span class="material-icons text-xl">delete</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Nivel Tipo (Hijos de Principal) -->
+      <div *ngIf="principal.expanded && principal.subcategorias" class="ml-12 mt-2 space-y-2">
+        <div *ngFor="let tipo of principal.subcategorias">
+          <!-- Categoría Tipo -->
+          <div
+            class="flex items-center justify-between p-3 rounded-lg border-2
+                   {{ getTipoBgColor(tipo.tipo) }}
+                   border-serviam-secondary dark:border-serviam-dark-secondary
+                   hover:shadow-md transition-all duration-200"
+          >
+            <div class="flex items-center gap-3 flex-1">
+              <!-- Botón expandir/contraer -->
+              <button
+                *ngIf="tipo.subcategorias && tipo.subcategorias.length > 0"
+                (click)="toggleExpand(tipo)"
+                class="text-gray-500 dark:text-gray-400 hover:text-serviam-secondary dark:hover:text-serviam-dark-secondary
+                       transition-colors"
+              >
+                <span class="material-icons text-lg">
+                  {{ tipo.expanded ? 'expand_more' : 'chevron_right' }}
+                </span>
+              </button>
+              <span *ngIf="!tipo.subcategorias || tipo.subcategorias.length === 0" class="w-5"></span>
+
+              <!-- Icono y nombre -->
+              <span class="material-icons {{ getTipoColor(tipo.tipo) }} text-lg">
+                {{ getTipoInfo(tipo.tipo).icon }}
+              </span>
+
+              <div class="flex-1">
+                <span class="font-medium text-gray-800 dark:text-serviam-dark-text">
+                  {{ tipo.nombre }}
+                </span>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-xs px-2 py-0.5 rounded-full {{ getTipoBgColor(tipo.tipo) }} {{ getTipoColor(tipo.tipo) }} font-medium">
+                    {{ getTipoInfo(tipo.tipo).label }}
+                  </span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                    ID: {{ tipo.idCategoria }}
+                  </span>
+                  <span *ngIf="tipo.subcategorias && tipo.subcategorias.length > 0"
+                        class="text-xs text-gray-500 dark:text-gray-400">
+                    • {{ tipo.subcategorias.length }} subcategoría(s)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex gap-2">
+              <button
+                (click)="openEditPanel(tipo)"
+                class="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20
+                       rounded-lg transition-colors"
+                title="Editar"
+              >
+                <span class="material-icons text-lg">edit</span>
+              </button>
+              <button
+                (click)="deleteCategoria(tipo)"
+                class="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20
+                       rounded-lg transition-colors"
+                title="Eliminar"
+              >
+                <span class="material-icons text-lg">delete</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Nivel Sub (Hijos de Tipo) -->
+          <div *ngIf="tipo.expanded && tipo.subcategorias" class="ml-12 mt-2 space-y-2">
+            <div *ngFor="let sub of tipo.subcategorias">
+              <!-- Categoría Sub -->
+              <div
+                class="flex items-center justify-between p-3 rounded-lg border-2
+                       {{ getTipoBgColor(sub.tipo) }}
+                       border-serviam-alert dark:border-serviam-dark-alert
+                       hover:shadow-md transition-all duration-200"
+              >
+                <div class="flex items-center gap-3 flex-1">
+                  <span class="w-5"></span>
+
+                  <!-- Icono y nombre -->
+                  <span class="material-icons {{ getTipoColor(sub.tipo) }} text-lg">
+                    {{ getTipoInfo(sub.tipo).icon }}
+                  </span>
+
+                  <div class="flex-1">
+                    <span class="font-medium text-gray-800 dark:text-serviam-dark-text">
+                      {{ sub.nombre }}
+                    </span>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="text-xs px-2 py-0.5 rounded-full {{ getTipoBgColor(sub.tipo) }} {{ getTipoColor(sub.tipo) }} font-medium">
+                        {{ getTipoInfo(sub.tipo).label }}
+                      </span>
+                      <span class="text-xs text-gray-500 dark:text-gray-400">
+                        ID: {{ sub.idCategoria }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="flex gap-2">
+                  <button
+                    (click)="openEditPanel(sub)"
+                    class="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20
+                           rounded-lg transition-colors"
+                    title="Editar"
+                  >
+                    <span class="material-icons text-lg">edit</span>
+                  </button>
+                  <button
+                    (click)="deleteCategoria(sub)"
+                    class="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20
+                           rounded-lg transition-colors"
+                    title="Eliminar"
+                  >
+                    <span class="material-icons text-lg">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel Lateral (Crear/Editar) -->
+<div
+  *ngIf="showPanel"
+  class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end"
+  (click)="closePanel()"
+>
+  <div
+    class="bg-white dark:bg-serviam-dark-card w-full max-w-md h-full overflow-y-auto shadow-2xl"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header del panel -->
+    <div class="sticky top-0 bg-serviam-primary dark:bg-serviam-dark-primary text-white p-6 z-10">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold">
+            {{ isEditMode ? 'Editar Categoría' : 'Nueva Categoría' }}
+          </h2>
+          <p class="text-sm opacity-90 mt-1">
+            {{ isEditMode ? 'Modifica los datos de la categoría' : 'Completa la información requerida' }}
+          </p>
+        </div>
+        <button
+          (click)="closePanel()"
+          class="p-2 hover:bg-white/20 rounded-lg transition-colors"
+        >
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="categoriaForm" (ngSubmit)="onSubmit()" class="p-6 space-y-6">
+
+      <!-- Nombre con autocompletado -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-serviam-dark-text mb-2">
+          Nombre de la Categoría *
+        </label>
+        <mat-form-field appearance="outline" class="w-full">
+          <input
+            matInput
+            type="text"
+            formControlName="nombre"
+            [matAutocomplete]="auto"
+            placeholder="Ej: SOPORTE DE HARDWARE"
+            class="dark:text-serviam-dark-text"
+          />
+          <mat-autocomplete #auto="matAutocomplete">
+            <mat-option *ngFor="let nombre of filteredNombres | async" [value]="nombre">
+              <div class="flex items-center gap-2">
+                <span class="material-icons text-sm text-serviam-secondary">content_copy</span>
+                {{ nombre }}
+              </div>
+            </mat-option>
+          </mat-autocomplete>
+          <mat-error *ngIf="categoriaForm.get('nombre')?.hasError('required')">
+            El nombre es requerido
+          </mat-error>
+          <mat-error *ngIf="categoriaForm.get('nombre')?.hasError('maxlength')">
+            Máximo 100 caracteres
+          </mat-error>
+        </mat-form-field>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Tip: Escribe para ver sugerencias de nombres existentes
+        </p>
+      </div>
+
+      <!-- Tipo -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-serviam-dark-text mb-3">
+          Tipo de Categoría *
+        </label>
+        <div class="space-y-2">
+          <div
+            *ngFor="let tipoOption of tipos"
+            class="flex items-start p-3 rounded-lg border-2 cursor-pointer transition-all
+                   {{ categoriaForm.get('tipo')?.value === tipoOption.value
+                      ? 'border-serviam-primary dark:border-serviam-dark-primary ' + getTipoBgColor(tipoOption.value)
+                      : 'border-gray-200 dark:border-serviam-dark-border hover:border-gray-300' }}"
+            (click)="categoriaForm.patchValue({ tipo: tipoOption.value })"
+          >
+            <input
+              type="radio"
+              formControlName="tipo"
+              [value]="tipoOption.value"
+              class="mt-1 mr-3"
+            />
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="material-icons {{ getTipoColor(tipoOption.value) }} text-lg">
+                  {{ tipoOption.icon }}
+                </span>
+                <span class="font-medium text-gray-800 dark:text-serviam-dark-text">
+                  {{ tipoOption.label }}
+                </span>
+                <span class="text-xs px-2 py-0.5 rounded-full {{ getTipoBgColor(tipoOption.value) }} {{ getTipoColor(tipoOption.value) }}">
+                  {{ tipoOption.value }}
+                </span>
+              </div>
+              <p class="text-xs text-gray-600 dark:text-gray-400">
+                {{ tipoOption.description }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categoría Padre para Tipo T (un solo selector) -->
+      <div *ngIf="categoriaForm.get('tipo')?.value === 'T'">
+        <label class="block text-sm font-medium text-gray-700 dark:text-serviam-dark-text mb-2">
+          Categoría Principal *
+        </label>
+        <select
+          formControlName="idCategoriaPadre"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-serviam-dark-border rounded-lg
+                 bg-white dark:bg-serviam-dark-surface text-gray-800 dark:text-serviam-dark-text
+                 focus:ring-2 focus:ring-serviam-primary dark:focus:ring-serviam-dark-primary focus:border-transparent"
+        >
+          <option [value]="null">Seleccione una categoría principal</option>
+          <option *ngFor="let padre of categoriasDisponiblesPadre" [value]="padre.idCategoria">
+            {{ padre.nombre }}
+          </option>
+        </select>
+        <div
+          *ngIf="categoriaForm.get('idCategoriaPadre')?.touched && categoriaForm.get('idCategoriaPadre')?.hasError('required')"
+          class="text-red-600 dark:text-red-400 text-xs mt-1"
+        >
+          Debe seleccionar una categoría principal
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Selecciona la categoría Principal bajo la cual se creará este Tipo
+        </p>
+      </div>
+
+      <!-- Selección en cascada para Tipo S (dos selectores) -->
+      <div *ngIf="categoriaForm.get('tipo')?.value === 'S'">
+        <!-- Selector 1: Categoría Principal -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-serviam-dark-text mb-2">
+            1. Categoría Principal *
+          </label>
+          <select
+            formControlName="idCategoriaPrincipal"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-serviam-dark-border rounded-lg
+                   bg-white dark:bg-serviam-dark-surface text-gray-800 dark:text-serviam-dark-text
+                   focus:ring-2 focus:ring-serviam-primary dark:focus:ring-serviam-dark-primary focus:border-transparent"
+          >
+            <option [value]="null">Seleccione una categoría principal</option>
+            <option *ngFor="let principal of categoriasPrincipales" [value]="principal.idCategoria">
+              {{ principal.nombre }}
+            </option>
+          </select>
+          <div
+            *ngIf="categoriaForm.get('idCategoriaPrincipal')?.touched && categoriaForm.get('idCategoriaPrincipal')?.hasError('required')"
+            class="text-red-600 dark:text-red-400 text-xs mt-1"
+          >
+            Debe seleccionar una categoría principal
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Primero selecciona la categoría Principal
+          </p>
+        </div>
+
+        <!-- Selector 2: Categoría Tipo (filtrada por Principal) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-serviam-dark-text mb-2">
+            2. Categoría Tipo *
+            <span *ngIf="categoriaForm.get('idCategoriaPrincipal')?.value" class="text-xs font-normal text-gray-500">
+              (bajo {{ getNombrePrincipal(categoriaForm.get('idCategoriaPrincipal')?.value) }})
+            </span>
+          </label>
+          <select
+            formControlName="idCategoriaPadre"
+            [disabled]="!categoriaForm.get('idCategoriaPrincipal')?.value"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-serviam-dark-border rounded-lg
+                   bg-white dark:bg-serviam-dark-surface text-gray-800 dark:text-serviam-dark-text
+                   focus:ring-2 focus:ring-serviam-primary dark:focus:ring-serviam-dark-primary focus:border-transparent
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option [value]="null">
+              {{ categoriaForm.get('idCategoriaPrincipal')?.value
+                 ? 'Seleccione una categoría tipo'
+                 : 'Primero seleccione una categoría principal' }}
+            </option>
+            <option *ngFor="let tipo of categoriasTipoFiltradas" [value]="tipo.idCategoria">
+              {{ tipo.nombre }}
+            </option>
+          </select>
+          <div
+            *ngIf="categoriaForm.get('idCategoriaPadre')?.touched && categoriaForm.get('idCategoriaPadre')?.hasError('required')"
+            class="text-red-600 dark:text-red-400 text-xs mt-1"
+          >
+            Debe seleccionar una categoría tipo
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Luego selecciona la categoría Tipo dentro de esa Principal
+          </p>
+          <div *ngIf="categoriasTipoFiltradas.length === 0 && categoriaForm.get('idCategoriaPrincipal')?.value"
+               class="text-amber-600 dark:text-amber-400 text-xs mt-2 flex items-center gap-1">
+            <span class="material-icons text-sm">warning</span>
+            No hay categorías Tipo disponibles para la Principal seleccionada
+          </div>
+        </div>
+      </div>
+
+      <!-- Información de padre actual (solo en edición) -->
+      <div *ngIf="isEditMode && selectedCategoria"
+           class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800
+                  rounded-lg p-4">
+        <div class="flex items-start gap-2">
+          <span class="material-icons text-blue-600 dark:text-blue-400 text-sm">info</span>
+          <div class="flex-1 text-sm">
+            <p class="font-medium text-blue-800 dark:text-blue-300">Editando categoría:</p>
+            <p class="text-blue-700 dark:text-blue-400 mt-1">
+              <span class="font-semibold">{{ selectedCategoria.nombre }}</span>
+              ({{ getTipoInfo(selectedCategoria.tipo).label }})
+            </p>
+            <p class="text-blue-600 dark:text-blue-500 text-xs mt-1">
+              Padre actual: {{ getNombrePadre(selectedCategoria.idCategoriaPadre) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="flex gap-3 pt-4">
+        <button
+          type="button"
+          (click)="closePanel()"
+          class="flex-1 px-4 py-2 border border-gray-300 dark:border-serviam-dark-border
+                 text-gray-700 dark:text-serviam-dark-text rounded-lg
+                 hover:bg-gray-50 dark:hover:bg-serviam-dark-surface transition-colors"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="categoriaForm.invalid || loading"
+          class="flex-1 px-4 py-2 bg-serviam-primary dark:bg-serviam-dark-primary
+                 text-white rounded-lg hover:bg-serviam-primary/90 dark:hover:bg-serviam-dark-primary/90
+                 transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+                 flex items-center justify-center gap-2"
+        >
+          <span *ngIf="loading" class="animate-spin material-icons text-sm">refresh</span>
+          {{ isEditMode ? 'Guardar Cambios' : 'Crear Categoría' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
