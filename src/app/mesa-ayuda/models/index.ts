@@ -4,6 +4,7 @@ export * from './empresa.model';
 export * from './categoria.model';
 export * from './localidad.model';
 export * from './prioridad.model';
+export * from './proyecto.model';
 export * from './sla.model';
 export * from './nivelAtencion.model';
 export * from './empleado.model';

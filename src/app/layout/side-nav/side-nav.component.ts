@@ -33,7 +33,9 @@ menuItems: MenuItem[] = [
     icon: 'settings',
     tooltip: 'Administración',
     children: [
-      { label: 'Categorías', icon: 'category', route: '/mesa-ayuda/mantenedor-categorias' }
+      { label: 'Categorías', icon: 'category', route: '/mesa-ayuda/mantenedor-categorias' },
+      { label: 'Prioridades', icon: 'flag', route: '/mesa-ayuda/mantenedor-prioridades' },
+      { label: 'Proyectos', icon: 'work', route: '/mesa-ayuda/mantenedor-proyectos' }
     ]
   }
 ];

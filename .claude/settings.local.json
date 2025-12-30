@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//mnt/c/Users/paranda/Desktop/Proyecto Mesa de ayuda - MDA/Backend/MDA.Tickets/MDA.Domain/**)",
+      "Read(//mnt/c/Users/paranda/Desktop/Proyecto Mesa de ayuda - MDA/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

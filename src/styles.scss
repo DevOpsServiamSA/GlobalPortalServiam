@@ -41,3 +41,123 @@ body {
 * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
+
+/* ============================================ */
+/* Custom Snackbar Styles - Notificaciones Toast */
+/* ============================================ */
+
+/* Estilos base para todos los snackbars */
+.mat-mdc-snack-bar-container {
+  margin: 8px !important;
+
+  .mdc-snackbar__surface {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    min-width: 320px !important;
+    max-width: 500px !important;
+  }
+
+  .mat-mdc-snack-bar-label {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    padding: 4px 0 !important;
+  }
+
+  .mat-mdc-button {
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Success Snackbar - Verde */
+.success-snackbar {
+  .mdc-snackbar__surface {
+    background-color: #10b981 !important; /* green-500 */
+  }
+
+  .mat-mdc-snack-bar-label,
+  .mat-mdc-button {
+    color: #ffffff !important;
+  }
+
+  .mat-mdc-button:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+}
+
+/* Dark mode - Success */
+.dark .success-snackbar {
+  .mdc-snackbar__surface {
+    background-color: #059669 !important; /* green-600 */
+  }
+}
+
+/* Error Snackbar - Rojo */
+.error-snackbar {
+  .mdc-snackbar__surface {
+    background-color: #ef4444 !important; /* red-500 */
+  }
+
+  .mat-mdc-snack-bar-label,
+  .mat-mdc-button {
+    color: #ffffff !important;
+  }
+
+  .mat-mdc-button:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+}
+
+/* Dark mode - Error */
+.dark .error-snackbar {
+  .mdc-snackbar__surface {
+    background-color: #dc2626 !important; /* red-600 */
+  }
+}
+
+/* Warning Snackbar - Amarillo/Naranja */
+.warning-snackbar {
+  .mdc-snackbar__surface {
+    background-color: #f59e0b !important; /* amber-500 */
+  }
+
+  .mat-mdc-snack-bar-label,
+  .mat-mdc-button {
+    color: #ffffff !important;
+  }
+
+  .mat-mdc-button:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+}
+
+/* Dark mode - Warning */
+.dark .warning-snackbar {
+  .mdc-snackbar__surface {
+    background-color: #d97706 !important; /* amber-600 */
+  }
+}
+
+/* Info Snackbar - Azul (Serviam Primary) */
+.info-snackbar {
+  .mdc-snackbar__surface {
+    background-color: #00699C !important; /* serviam-primary */
+  }
+
+  .mat-mdc-snack-bar-label,
+  .mat-mdc-button {
+    color: #ffffff !important;
+  }
+
+  .mat-mdc-button:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+}
+
+/* Dark mode - Info */
+.dark .info-snackbar {
+  .mdc-snackbar__surface {
+    background-color: #4da3d1 !important; /* serviam-dark-primary */
+  }
+}

@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { MesaAyudaRoutingModule } from './mesa-ayuda-routing.module';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
@@ -24,6 +25,9 @@ import { CategoriaService } from './services/categoria.service';
 import { StyleUtilsService, DateUtilsService } from './utils';
 
 
+import { MantenedorPrioridadesComponent } from './pages/mantenedor-prioridades/mantenedor-prioridades.component';
+import { MantenedorProyectosComponent } from './pages/mantenedor-proyectos/mantenedor-proyectos.component';
+
 @NgModule({
   declarations: [
     DashboardComponent,
@@ -32,7 +36,9 @@ import { StyleUtilsService, DateUtilsService } from './utils';
     EditarTicketComponent,
     DetalleDrawerComponent,
     CrearTicketComponent,
-    MantenedorCategoriasComponent
+    MantenedorCategoriasComponent,
+    MantenedorPrioridadesComponent,
+    MantenedorProyectosComponent
   ],
   imports: [
     CommonModule,
@@ -46,6 +52,7 @@ import { StyleUtilsService, DateUtilsService } from './utils';
     MatIconModule,
     MatButtonModule,
     MatSelectModule,
+    MatSnackBarModule,
     MesaAyudaRoutingModule
   ],
   exports: [

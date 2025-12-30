@@ -6,6 +6,8 @@ import { DetalleTicketComponent } from './pages/detalle-ticket/detalle-ticket.co
 import { CrearTicketComponent } from './pages/crear-ticket/crear-ticket.component';
 import { EditarTicketComponent } from './pages/editar-ticket/editar-ticket.component';
 import { MantenedorCategoriasComponent } from './pages/mantenedor-categorias/mantenedor-categorias.component';
+import { MantenedorPrioridadesComponent } from './pages/mantenedor-prioridades/mantenedor-prioridades.component';
+import { MantenedorProyectosComponent } from './pages/mantenedor-proyectos/mantenedor-proyectos.component';
 import { RoleGuard } from '../auth/role.guard';
 
 const routes: Routes = [
@@ -35,6 +37,18 @@ const routes: Routes = [
   {
     path: 'mantenedor-categorias',
     component: MantenedorCategoriasComponent,
+    canActivate: [RoleGuard],
+    data: { roles: ['administrador'] }
+  },
+  {
+    path: 'mantenedor-prioridades',
+    component: MantenedorPrioridadesComponent,
+    canActivate: [RoleGuard],
+    data: { roles: ['administrador'] }
+  },
+  {
+    path: 'mantenedor-proyectos',
+    component: MantenedorProyectosComponent,
     canActivate: [RoleGuard],
     data: { roles: ['administrador'] }
   }
