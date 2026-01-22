@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { TicketService } from '../../services/ticket.service';
-import { AuthService } from '../../../auth/services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { NivelAtencionService } from '../../services/nivelAtencion.service';
 // import { EstadoTicketService } from '../../services/estadoTicket.service'; // Ya no se usa para líneas
 import { CategoriaService } from '../../services/categoria.service';

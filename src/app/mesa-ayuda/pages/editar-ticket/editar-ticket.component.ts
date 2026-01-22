@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { TicketService } from '../../services/ticket.service';
-import { AuthService } from '../../../auth/services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { CategoriaService } from '../../services/categoria.service';
 import { EstadoTicketService } from '../../services/estadoTicket.service';
 import { EmpresaService } from '../../services/empresa.service';

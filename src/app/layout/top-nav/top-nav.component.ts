@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Output, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { AuthService } from '../../auth/services/auth.service';
-import { UserInfo } from '../../auth/models/auth.models';
-import { ThemeService, Theme } from '../services/theme.service';
+import { AuthService } from '../../core/services/auth.service';
+import { UserInfo } from '../../core/models/auth.models';
+import { ThemeService, Theme } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-top-nav',

@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { TopNavComponent } from './top-nav/top-nav.component';
 import { SideNavComponent } from './side-nav/side-nav.component';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { HasRoleDirective } from '../auth/directives/has-role.directive';
+import { HasRoleDirective } from '../auth/directives/has-role.directive'; // TODO: FASE 2 - Mover a SharedModule
 
 @NgModule({
   declarations: [MainLayoutComponent, TopNavComponent, SideNavComponent],

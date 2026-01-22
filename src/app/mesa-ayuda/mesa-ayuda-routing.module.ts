@@ -8,7 +8,7 @@ import { EditarTicketComponent } from './pages/editar-ticket/editar-ticket.compo
 import { MantenedorCategoriasComponent } from './pages/mantenedor-categorias/mantenedor-categorias.component';
 import { MantenedorPrioridadesComponent } from './pages/mantenedor-prioridades/mantenedor-prioridades.component';
 import { MantenedorProyectosComponent } from './pages/mantenedor-proyectos/mantenedor-proyectos.component';
-import { RoleGuard } from '../auth/role.guard';
+import { RoleGuard } from '../core/guards/role.guard';
 
 const routes: Routes = [
   {

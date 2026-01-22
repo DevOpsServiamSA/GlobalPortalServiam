@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { TicketService } from '../../services/ticket.service';
-import { AuthService } from '../../../auth/services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { TicketDashboardDto, DashboardFilters, TicketDashboardPaginatedDto } from '../../models';
 import { StyleUtilsService, DateUtilsService } from '../../utils';
-import { UserInfo } from '../../../auth/models/auth.models';
+import { UserInfo } from '../../../core/models/auth.models';
 
 @Component({
   selector: 'app-dashboard',

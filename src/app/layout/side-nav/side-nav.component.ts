@@ -10,7 +10,7 @@ import { MenuItem } from './menu.model';
 export class SideNavComponent {
   @Output() navigationClick = new EventEmitter<void>();
   collapsed = false;
-  submenuOpen: Record<number, boolean> = {};
+  submenuOpen: Record<string, boolean> = {};
 
 menuItems: MenuItem[] = [
   {
@@ -25,17 +25,18 @@ menuItems: MenuItem[] = [
     tooltip: 'Mesa de ayuda',
     children: [
       { label: 'Tickets', icon: 'confirmation_number', route: '/mesa-ayuda' },
-      { label: 'Nuevo ticket', icon: 'add_circle', route: '/mesa-ayuda/nuevo' }
-    ]
-  },
-  {
-    label: 'Administración',
-    icon: 'settings',
-    tooltip: 'Administración',
-    children: [
-      { label: 'Categorías', icon: 'category', route: '/mesa-ayuda/mantenedor-categorias' },
-      { label: 'Prioridades', icon: 'flag', route: '/mesa-ayuda/mantenedor-prioridades' },
-      { label: 'Proyectos', icon: 'work', route: '/mesa-ayuda/mantenedor-proyectos' }
+      { label: 'Nuevo ticket', icon: 'add_circle', route: '/mesa-ayuda/nuevo' },
+      {
+        label: 'Administración',
+        icon: 'settings',
+        tooltip: 'Administración',
+        requiresRole: 'administrador',
+        children: [
+          { label: 'Categorías', icon: 'category', route: '/mesa-ayuda/mantenedor-categorias' },
+          { label: 'Prioridades', icon: 'flag', route: '/mesa-ayuda/mantenedor-prioridades' },
+          { label: 'Proyectos', icon: 'work', route: '/mesa-ayuda/mantenedor-proyectos' }
+        ]
+      }
     ]
   }
 ];
@@ -44,8 +45,12 @@ menuItems: MenuItem[] = [
     this.collapsed = !this.collapsed;
   }
 
-  toggleSubmenu(index: number) {
-    this.submenuOpen[index] = !this.submenuOpen[index];
+  toggleSubmenu(key: string) {
+    this.submenuOpen[key] = !this.submenuOpen[key];
+  }
+
+  isSubmenuOpen(key: string): boolean {
+    return this.submenuOpen[key] || false;
   }
 
   onNavigationClick() {
