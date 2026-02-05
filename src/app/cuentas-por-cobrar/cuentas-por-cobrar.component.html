@@ -1,0 +1,31 @@
+<div class="cuentas-por-cobrar-container p-6">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Cuentas por Cobrar</h1>
+    <p class="text-gray-600">Gestión de deudas y pagos por empresa</p>
+  </div>
+
+  <!-- Company Selector -->
+  <div class="mb-6 bg-white p-4 rounded-lg shadow-sm sticky top-0 z-10">
+    <app-selector-empresa></app-selector-empresa>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <nav class="mb-6">
+    <div class="flex flex-wrap gap-2 border-b border-gray-200">
+      <button
+        *ngFor="let link of navLinks"
+        [routerLink]="link.route"
+        routerLinkActive="border-b-2 border-serviam-primary text-serviam-primary"
+        class="flex items-center gap-2 px-4 py-3 text-gray-600 hover:text-serviam-primary hover:bg-gray-50 transition-colors">
+        <mat-icon>{{ link.icon }}</mat-icon>
+        <span class="font-medium">{{ link.label }}</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Router Outlet for Child Views -->
+  <div class="view-container">
+    <router-outlet></router-outlet>
+  </div>
+</div>

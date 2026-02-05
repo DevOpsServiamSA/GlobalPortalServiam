@@ -1,0 +1,18 @@
+<div class="selector-empresa-container">
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Seleccionar Empresa</mat-label>
+    <mat-select
+      [(ngModel)]="empresaSeleccionada"
+      (ngModelChange)="onEmpresaChange($event)"
+      [compareWith]="compareEmpresas"
+      [disabled]="loading">
+      <mat-option [value]="null">-- Seleccionar empresa --</mat-option>
+      <mat-option *ngFor="let empresa of empresas" [value]="empresa">
+        {{ empresa.razonSocial }} - {{ empresa.ruc }}
+      </mat-option>
+    </mat-select>
+    <mat-icon matPrefix class="mr-2">business</mat-icon>
+    <mat-hint *ngIf="!empresaSeleccionada">Seleccione una empresa para ver sus cuentas</mat-hint>
+    <mat-hint *ngIf="empresaSeleccionada">{{ empresaSeleccionada.direccion }}</mat-hint>
+  </mat-form-field>
+</div>

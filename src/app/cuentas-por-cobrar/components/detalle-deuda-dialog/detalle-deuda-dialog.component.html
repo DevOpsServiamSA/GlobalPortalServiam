@@ -1,0 +1,82 @@
+<h2 mat-dialog-title class="flex items-center justify-between">
+  <span>Detalle del Documento</span>
+  <button mat-icon-button (click)="onClose()">
+    <mat-icon>close</mat-icon>
+  </button>
+</h2>
+
+<mat-dialog-content class="p-6">
+  <div class="space-y-4">
+    <!-- Header -->
+    <div class="bg-gray-50 p-4 rounded-lg">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold">{{ deuda.numeroDocumento }}</h3>
+        <span [ngClass]="estadoClass" class="px-3 py-1 rounded-full text-sm font-medium">
+          {{ estadoLabel }}
+        </span>
+      </div>
+      <p class="text-sm text-gray-600">{{ tipoDocumentoLabel }}</p>
+    </div>
+
+    <!-- Montos -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="border-l-4 border-l-gray-500 pl-3">
+        <p class="text-xs text-gray-500 uppercase">Monto Original</p>
+        <p class="text-lg font-bold">{{ currencyUtils.formatCurrency(deuda.montoOriginal, deuda.moneda) }}</p>
+      </div>
+      <div class="border-l-4 border-l-green-500 pl-3">
+        <p class="text-xs text-gray-500 uppercase">Pagado</p>
+        <p class="text-lg font-bold text-green-600">{{ currencyUtils.formatCurrency(deuda.montoPagado, deuda.moneda) }}</p>
+      </div>
+      <div class="border-l-4 border-l-red-500 pl-3">
+        <p class="text-xs text-gray-500 uppercase">Pendiente</p>
+        <p class="text-lg font-bold text-red-600">{{ currencyUtils.formatCurrency(deuda.montoPendiente, deuda.moneda) }}</p>
+      </div>
+    </div>
+
+    <!-- Fechas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <p class="text-xs text-gray-500 uppercase mb-1">Fecha de Emisión</p>
+        <div class="flex items-center">
+          <mat-icon class="text-gray-400 mr-2" style="font-size: 18px;">calendar_today</mat-icon>
+          <p class="text-sm">{{ dateUtils.formatDate(deuda.fechaEmision) }}</p>
+        </div>
+      </div>
+      <div>
+        <p class="text-xs text-gray-500 uppercase mb-1">Fecha de Vencimiento</p>
+        <div class="flex items-center">
+          <mat-icon class="text-gray-400 mr-2" style="font-size: 18px;">event</mat-icon>
+          <p class="text-sm">{{ dateUtils.formatDate(deuda.fechaVencimiento) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Días vencidos -->
+    <div *ngIf="deuda.diasVencidos > 0" class="bg-red-50 border-l-4 border-l-red-500 p-3 rounded">
+      <div class="flex items-center">
+        <mat-icon class="text-red-600 mr-2">warning</mat-icon>
+        <p class="text-sm text-red-700">
+          <span class="font-bold">{{ deuda.diasVencidos }} días vencidos</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Descripción -->
+    <div *ngIf="deuda.descripcion">
+      <p class="text-xs text-gray-500 uppercase mb-1">Descripción</p>
+      <p class="text-sm bg-gray-50 p-3 rounded">{{ deuda.descripcion }}</p>
+    </div>
+
+    <!-- Moneda -->
+    <div>
+      <p class="text-xs text-gray-500 uppercase mb-1">Moneda</p>
+      <p class="text-sm">{{ deuda.moneda === 'PEN' ? 'Soles (S/)' : 'Dólares ($)' }}</p>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="p-4">
+  <button mat-button (click)="onClose()">Cerrar</button>
+  <button mat-raised-button color="primary" (click)="onClose()">Aceptar</button>
+</mat-dialog-actions>

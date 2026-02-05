@@ -17,6 +17,10 @@ const routes: Routes = [
             {
                 path: 'mesa-ayuda',
                 loadChildren: () => import('./mesa-ayuda/mesa-ayuda.module').then(m => m.MesaAyudaModule)
+            },
+            {
+                path: 'cuentas-por-cobrar',
+                loadChildren: () => import('./cuentas-por-cobrar/cuentas-por-cobrar.module').then(m => m.CuentasPorCobrarModule)
             }
         ]
     },

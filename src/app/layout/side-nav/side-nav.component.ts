@@ -38,6 +38,16 @@ menuItems: MenuItem[] = [
         ]
       }
     ]
+  },
+  {
+    label: 'Cuentas por Cobrar',
+    icon: 'account_balance',
+    tooltip: 'Gestión de Cuentas por Cobrar',
+    children: [
+      { label: 'Dashboard', icon: 'dashboard', route: '/cuentas-por-cobrar/dashboard' },
+      { label: 'Detalle de Cuenta', icon: 'receipt_long', route: '/cuentas-por-cobrar/detalle' },
+      { label: 'Historial de Pagos', icon: 'payments', route: '/cuentas-por-cobrar/historial-pagos' }
+    ]
   }
 ];
 

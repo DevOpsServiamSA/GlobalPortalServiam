@@ -1,0 +1,16 @@
+<div [ngClass]="cardClasses">
+  <div class="flex items-start justify-between">
+    <div class="flex-1">
+      <div class="flex items-center mb-2">
+        <mat-icon [ngClass]="iconoClasses" class="mr-2">{{ icono }}</mat-icon>
+        <h3 class="text-sm font-medium text-gray-600 uppercase">{{ titulo }}</h3>
+      </div>
+      <p [ngClass]="montoClasses" class="text-3xl font-bold mb-1">
+        {{ montoFormateado }}
+      </p>
+      <p *ngIf="descripcion" class="text-xs text-gray-500 mt-2">
+        {{ descripcion }}
+      </p>
+    </div>
+  </div>
+</div>

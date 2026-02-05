@@ -1,0 +1,11 @@
+.selector-empresa-container {
+  margin-bottom: 1.5rem;
+}
+
+.selector-empresa-container mat-form-field {
+  max-width: 600px;
+}
+
+::ng-deep .selector-empresa-container .mat-mdc-form-field {
+  width: 100%;
+}
