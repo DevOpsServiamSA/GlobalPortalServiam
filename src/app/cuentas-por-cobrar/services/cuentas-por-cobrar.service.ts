@@ -10,16 +10,29 @@ import {
   FiltrosHistorialPagos
 } from '../interfaces/cxc.interfaces';
 import { MockDataService } from './mock-data.service';
+import { ClientesApiService } from './clientes-api.service';
+import { EstadoCuentaApiService } from './estado-cuenta-api.service';
+import { EnviosApiService } from './envios-api.service';
+import { ClienteEmailsApiService } from './cliente-emails-api.service';
+import { EmpresaMapperService } from './empresa-mapper.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CuentasPorCobrarService {
 
-  constructor(private mockDataService: MockDataService) { }
+  constructor(
+    private mockDataService: MockDataService,
+    private clientesApiService: ClientesApiService,
+    private estadoCuentaApiService: EstadoCuentaApiService,
+    private enviosApiService: EnviosApiService,
+    private clienteEmailsApiService: ClienteEmailsApiService,
+    private empresaMapperService: EmpresaMapperService
+  ) { }
 
   /**
    * Get account summary for a company
+   * @deprecated Use getClientesFromApi instead for real data
    */
   getResumenCuenta(empresaId: number): Observable<ResumenCuenta | undefined> {
     return of(this.mockDataService.getResumenCuenta(empresaId)).pipe(
@@ -29,6 +42,7 @@ export class CuentasPorCobrarService {
 
   /**
    * Get debt details for a company with optional filters and pagination
+   * @deprecated Use getClientesFromApi instead for real data
    */
   getDetallesDeuda(
     empresaId: number,
@@ -86,6 +100,7 @@ export class CuentasPorCobrarService {
 
   /**
    * Get payment history for a company with optional filters and pagination
+   * @deprecated Use getHistorialEnviosFromApi instead for real data
    */
   getHistorialPagos(
     empresaId: number,
@@ -142,6 +157,7 @@ export class CuentasPorCobrarService {
 
   /**
    * Get a single debt detail by ID
+   * @deprecated Mock data - use API services directly
    */
   getDetalleDeudaById(id: number): Observable<DetalleDeuda | undefined> {
     return of(this.mockDataService.getDetalleDeudaById(id)).pipe(
@@ -151,6 +167,7 @@ export class CuentasPorCobrarService {
 
   /**
    * Get total amount paid for a company in a date range
+   * @deprecated Mock data - use API services directly
    */
   getTotalPagado(empresaId: number, fechaDesde?: Date, fechaHasta?: Date): Observable<number> {
     return this.getHistorialPagos(empresaId, { fechaDesde, fechaHasta }, 1, 1000).pipe(
@@ -160,18 +177,69 @@ export class CuentasPorCobrarService {
     );
   }
 
-  // Future: Replace with actual HTTP calls
-  // getResumenCuenta(empresaId: number): Observable<ResumenCuenta> {
-  //   return this.http.get<ResumenCuenta>(`${environment.apiCuentasPorCobrar}/resumen/${empresaId}`);
-  // }
-  //
-  // getDetallesDeuda(empresaId: number, filtros?, page?, pageSize?): Observable<PaginatedResponse<DetalleDeuda>> {
-  //   const params = new HttpParams()
-  //     .set('page', page.toString())
-  //     .set('pageSize', pageSize.toString());
-  //   return this.http.get<PaginatedResponse<DetalleDeuda>>(
-  //     `${environment.apiCuentasPorCobrar}/detalles/${empresaId}`,
-  //     { params }
-  //   );
-  // }
+  // ============================================
+  // NEW API V2 METHODS
+  // ============================================
+
+  /**
+   * Obtener clientes desde API V2
+   * @param empresaId ID de empresa legacy (1-6)
+   * @param fechaCorte Fecha de corte en formato YYYY-MM-DD
+   * @param filtros Filtros adicionales
+   * @param page Página actual
+   * @param pageSize Tamaño de página
+   */
+  getClientesFromApi(
+    empresaId: number,
+    fechaCorte: string,
+    filtros?: Partial<{
+      ruc: string;
+      codigo: string;
+      razonSocial: string;
+      activo: boolean;
+      soloConSaldo: boolean;
+      moneda: 'S/.' | 'USD' | null;
+    }>,
+    page: number = 1,
+    pageSize: number = 10
+  ) {
+    const codigoEmpresa = this.empresaMapperService.toCodigoEmpresa(empresaId);
+
+    return this.clientesApiService.getClientes({
+      empresa: codigoEmpresa,
+      fechaCorte,
+      page,
+      pageSize,
+      ...filtros
+    });
+  }
+
+  /**
+   * Obtener historial de envíos desde API V2
+   * @param empresaId ID de empresa legacy (1-6)
+   * @param filtros Filtros de búsqueda
+   * @param page Página actual
+   * @param pageSize Tamaño de página
+   */
+  getHistorialEnviosFromApi(
+    empresaId: number,
+    filtros?: Partial<{
+      fechaDesde: string;
+      fechaHasta: string;
+      usuario: string;
+      estado: string;
+      searchTerm: string;
+    }>,
+    page: number = 1,
+    pageSize: number = 10
+  ) {
+    const codigoEmpresa = this.empresaMapperService.toCodigoEmpresa(empresaId);
+
+    return this.enviosApiService.getHistorialEnvios({
+      empresa: codigoEmpresa,
+      page,
+      pageSize,
+      ...filtros
+    });
+  }
 }
