@@ -1,16 +1,23 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { Subject } from 'rxjs';
-import { takeUntil, switchMap } from 'rxjs/operators';
+import { takeUntil } from 'rxjs/operators';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { EmpresaCxC, DetalleDeuda, FiltrosDetalleDeuda, TipoDocumento, EstadoDocumento, Moneda } from '../../interfaces/cxc.interfaces';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { EmpresaCxC } from '../../interfaces/cxc.interfaces';
+import { ClienteDto, CodigoEmpresa } from '../../interfaces/cxc-api.interfaces';
 import { EmpresaContextService } from '../../services/empresa-context.service';
-import { CuentasPorCobrarService } from '../../services/cuentas-por-cobrar.service';
+import { ClientesApiService } from '../../services/clientes-api.service';
+import { EstadoCuentaApiService } from '../../services/estado-cuenta-api.service';
+import { EnviosApiService } from '../../services/envios-api.service';
+import { CxcErrorHandlerService } from '../../services/error-handler.service';
+import { EmpresaMapperService } from '../../services/empresa-mapper.service';
 import { CurrencyUtils } from '../../utils/currency.utils';
 import { DateFormatUtils } from '../../utils/date-format.utils';
-import { DetalleDeudaDialogComponent } from '../../components/detalle-deuda-dialog/detalle-deuda-dialog.component';
+import { AuthService } from '../../../core/services/auth.service';
+import { ConfirmarEnvioDialogComponent, ConfirmarEnvioDialogData } from '../../components/confirmar-envio-dialog/confirmar-envio-dialog.component';
+import { GestionarEmailsDialogComponent, GestionarEmailsDialogData } from '../../components/gestionar-emails-dialog/gestionar-emails-dialog.component';
 
 @Component({
   selector: 'app-detalle-cuenta',
@@ -23,8 +30,11 @@ export class DetalleCuentaComponent implements OnInit, OnDestroy {
   @ViewChild(MatSort) sort!: MatSort;
 
   empresaSeleccionada: EmpresaCxC | null = null;
-  detalles: DetalleDeuda[] = [];
+  clientes: ClienteDto[] = [];
+  clientesSeleccionados: Set<string> = new Set();
   loading = false;
+  loadingPdf = false;
+  enviando = false;
   totalRecords = 0;
   pageSize = 10;
   pageIndex = 0;
@@ -35,32 +45,20 @@ export class DetalleCuentaComponent implements OnInit, OnDestroy {
   filtrosForm: FormGroup;
   mostrarFiltros = false;
 
+  // Columnas actualizadas para clientes
   displayedColumns: string[] = [
-    'numeroDocumento',
-    'tipoDocumento',
-    'fechaEmision',
-    'fechaVencimiento',
-    'montoOriginal',
-    'montoPendiente',
-    'estado',
+    'select',
+    'codigo',
+    'razonSocial',
+    'ruc',
+    'saldoLocal',
+    'saldoDolar',
+    'ultimoEnvio',
     'acciones'
   ];
 
-  tiposDocumento: { value: TipoDocumento; label: string }[] = [
-    { value: 'FACTURA', label: 'Factura' },
-    { value: 'NOTA_DEBITO', label: 'Nota de Débito' },
-    { value: 'NOTA_CREDITO', label: 'Nota de Crédito' }
-  ];
-
-  estados: { value: EstadoDocumento; label: string }[] = [
-    { value: 'PENDIENTE', label: 'Pendiente' },
-    { value: 'VENCIDO', label: 'Vencido' },
-    { value: 'PAGADO', label: 'Pagado' },
-    { value: 'PARCIALMENTE_PAGADO', label: 'Parcialmente Pagado' }
-  ];
-
-  monedas: { value: Moneda; label: string }[] = [
-    { value: 'PEN', label: 'Soles (S/)' },
+  monedas: { value: string; label: string }[] = [
+    { value: 'S/.', label: 'Soles (S/)' },
     { value: 'USD', label: 'Dólares ($)' }
   ];
 
@@ -69,14 +67,22 @@ export class DetalleCuentaComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private empresaContextService: EmpresaContextService,
-    private cuentasPorCobrarService: CuentasPorCobrarService,
+    private clientesApiService: ClientesApiService,
+    private estadoCuentaApiService: EstadoCuentaApiService,
+    private enviosApiService: EnviosApiService,
+    private errorHandlerService: CxcErrorHandlerService,
+    private empresaMapperService: EmpresaMapperService,
+    private authService: AuthService,
     private dialog: MatDialog
   ) {
+    // Fecha de corte obligatoria (hoy por defecto)
     this.filtrosForm = this.fb.group({
-      fechaDesde: [null],
-      fechaHasta: [null],
-      tipoDocumento: [null],
-      estado: [null],
+      fechaCorte: [new Date(), Validators.required],
+      ruc: [''],
+      codigo: [''],
+      razonSocial: [''],
+      activo: [true],
+      soloConSaldo: [true],
       moneda: [null]
     });
   }
@@ -96,132 +102,297 @@ export class DetalleCuentaComponent implements OnInit, OnDestroy {
       .subscribe(empresa => {
         this.empresaSeleccionada = empresa;
         this.pageIndex = 0;
+        this.clientesSeleccionados.clear();
         if (empresa) {
-          this.loadDetalles();
+          this.loadClientes();
         } else {
-          this.detalles = [];
+          this.clientes = [];
           this.totalRecords = 0;
         }
       });
   }
 
-  loadDetalles(): void {
-    if (!this.empresaSeleccionada) return;
+  loadClientes(): void {
+    if (!this.empresaSeleccionada || !this.filtrosForm.valid) return;
 
     this.loading = true;
-    const filtros = this.getFiltros();
+    const values = this.filtrosForm.value;
+    const codigoEmpresa = this.empresaMapperService.toCodigoEmpresa(this.empresaSeleccionada.id);
 
-    this.cuentasPorCobrarService.getDetallesDeuda(
-      this.empresaSeleccionada.id,
-      filtros,
-      this.pageIndex + 1,
-      this.pageSize
-    )
+    // Formatear fecha de corte a YYYY-MM-DD
+    const fechaCorte = this.formatDateToISO(values.fechaCorte);
+
+    this.clientesApiService.getClientes({
+      empresa: codigoEmpresa,
+      fechaCorte,
+      ruc: values.ruc || undefined,
+      codigo: values.codigo || undefined,
+      razonSocial: values.razonSocial || undefined,
+      activo: values.activo,
+      soloConSaldo: values.soloConSaldo,
+      moneda: values.moneda || null,
+      page: this.pageIndex + 1,
+      pageSize: this.pageSize
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.detalles = response.data;
-          this.totalRecords = response.total;
+          this.clientes = response.items;
+          this.totalRecords = response.totalCount;
           this.loading = false;
         },
         error: (error) => {
-          console.error('Error loading detalles:', error);
+          console.error('Error loading clientes:', error);
+          this.errorHandlerService.handleError(error);
           this.loading = false;
         }
       });
   }
 
-  private getFiltros(): FiltrosDetalleDeuda | undefined {
-    const values = this.filtrosForm.value;
-    const filtros: FiltrosDetalleDeuda = {};
-
-    if (values.fechaDesde) {
-      filtros.fechaDesde = values.fechaDesde;
-    }
-    if (values.fechaHasta) {
-      filtros.fechaHasta = values.fechaHasta;
-    }
-    if (values.tipoDocumento) {
-      filtros.tipoDocumento = values.tipoDocumento;
-    }
-    if (values.estado) {
-      filtros.estado = values.estado;
-    }
-    if (values.moneda) {
-      filtros.moneda = values.moneda;
-    }
-
-    return Object.keys(filtros).length > 0 ? filtros : undefined;
+  private formatDateToISO(date: Date): string {
+    if (!date) return new Date().toISOString().split('T')[0];
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   aplicarFiltros(): void {
     this.pageIndex = 0;
-    this.loadDetalles();
+    this.clientesSeleccionados.clear();
+    this.loadClientes();
   }
 
   limpiarFiltros(): void {
-    this.filtrosForm.reset();
+    this.filtrosForm.patchValue({
+      fechaCorte: new Date(),
+      ruc: '',
+      codigo: '',
+      razonSocial: '',
+      activo: true,
+      soloConSaldo: true,
+      moneda: null
+    });
     this.pageIndex = 0;
-    this.loadDetalles();
+    this.clientesSeleccionados.clear();
+    this.loadClientes();
   }
 
   onPageChange(event: any): void {
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
-    this.loadDetalles();
+    this.loadClientes();
   }
 
   toggleFiltros(): void {
     this.mostrarFiltros = !this.mostrarFiltros;
   }
 
-  getEstadoClass(estado: string): string {
-    switch (estado) {
-      case 'VENCIDO':
-        return 'bg-red-100 text-red-700';
-      case 'PENDIENTE':
-        return 'bg-amber-100 text-amber-700';
-      case 'PAGADO':
-        return 'bg-green-100 text-green-700';
-      case 'PARCIALMENTE_PAGADO':
-        return 'bg-blue-100 text-blue-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
+  // ============================================
+  // Selección de clientes
+  // ============================================
+
+  toggleClienteSeleccion(codigo: string): void {
+    if (this.clientesSeleccionados.has(codigo)) {
+      this.clientesSeleccionados.delete(codigo);
+    } else {
+      this.clientesSeleccionados.add(codigo);
     }
   }
 
-  getEstadoLabel(estado: string): string {
-    switch (estado) {
-      case 'VENCIDO':
-        return 'Vencido';
-      case 'PENDIENTE':
-        return 'Pendiente';
-      case 'PAGADO':
-        return 'Pagado';
-      case 'PARCIALMENTE_PAGADO':
-        return 'Parcial';
-      default:
-        return estado;
+  isClienteSeleccionado(codigo: string): boolean {
+    return this.clientesSeleccionados.has(codigo);
+  }
+
+  toggleTodosClientes(): void {
+    if (this.todoSeleccionado()) {
+      this.clientesSeleccionados.clear();
+    } else {
+      this.clientes.forEach(c => this.clientesSeleccionados.add(c.codigo));
     }
   }
 
-  getTipoDocumentoLabel(tipo: string): string {
-    switch (tipo) {
-      case 'FACTURA':
-        return 'Factura';
-      case 'NOTA_DEBITO':
-        return 'N. Débito';
-      case 'NOTA_CREDITO':
-        return 'N. Crédito';
-      default:
-        return tipo;
-    }
+  todoSeleccionado(): boolean {
+    return this.clientes.length > 0 && this.clientes.every(c => this.clientesSeleccionados.has(c.codigo));
   }
 
-  openDetalleDialog(deuda: DetalleDeuda): void {
-    this.dialog.open(DetalleDeudaDialogComponent, {
-      width: '600px',
-      data: { deuda }
+  algunoSeleccionado(): boolean {
+    return this.clientesSeleccionados.size > 0 && !this.todoSeleccionado();
+  }
+
+  // ============================================
+  // Preview de PDF
+  // ============================================
+
+  previewPdfCliente(cliente: ClienteDto): void {
+    this.previewPdf([cliente.codigo]);
+  }
+
+  previewPdfSeleccionados(): void {
+    if (this.clientesSeleccionados.size === 0) {
+      this.errorHandlerService.handleError({
+        status: 400,
+        error: { error: 'Debe seleccionar al menos un cliente' }
+      } as any);
+      return;
+    }
+    this.previewPdf(Array.from(this.clientesSeleccionados));
+  }
+
+  private previewPdf(codigosCliente: string[]): void {
+    if (!this.empresaSeleccionada) return;
+
+    this.loadingPdf = true;
+    const codigoEmpresa = this.empresaMapperService.toCodigoEmpresa(this.empresaSeleccionada.id);
+    const fechaCorte = this.formatDateToISO(this.filtrosForm.value.fechaCorte);
+    const moneda = this.filtrosForm.value.moneda;
+    const soloConSaldo = this.filtrosForm.value.soloConSaldo;
+
+    this.estadoCuentaApiService.previewEstadoCuenta(codigoEmpresa, {
+      fechaCorte,
+      codigosCliente,
+      soloConSaldo,
+      moneda
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          this.estadoCuentaApiService.abrirPdfEnNuevaTab(blob);
+          this.errorHandlerService.showSuccess('PDF generado correctamente');
+          this.loadingPdf = false;
+        },
+        error: (error) => {
+          console.error('Error generando PDF:', error);
+          this.errorHandlerService.handleError(error);
+          this.loadingPdf = false;
+        }
+      });
+  }
+
+  // ============================================
+  // Envío de correos
+  // ============================================
+
+  get puedeGestionarEmails(): boolean {
+    return this.authService.hasAnyRole(['administrador', 'creditos-gestor-correos']);
+  }
+
+  enviarEstadosCuentaSeleccionados(): void {
+    if (this.clientesSeleccionados.size === 0 || !this.empresaSeleccionada) return;
+    const codigos = Array.from(this.clientesSeleccionados);
+    this.abrirConfirmacionYEnviar(codigos, 'masivo');
+  }
+
+  enviarEmailCliente(cliente: ClienteDto): void {
+    if (!this.empresaSeleccionada) return;
+    this.abrirConfirmacionYEnviar([cliente.codigo], 'individual', cliente.razonSocial);
+  }
+
+  private abrirConfirmacionYEnviar(
+    codigosCliente: string[],
+    modo: 'individual' | 'masivo',
+    razonSocialCliente?: string
+  ): void {
+    if (!this.empresaSeleccionada) return;
+    const codigoEmpresa = this.empresaMapperService.toCodigoEmpresa(this.empresaSeleccionada.id);
+    const values = this.filtrosForm.value;
+    const fechaCorte = this.formatDateToISO(values.fechaCorte);
+
+    const dialogData: ConfirmarEnvioDialogData = {
+      empresa: codigoEmpresa,
+      empresaNombre: this.empresaSeleccionada.razonSocial,
+      fechaCorte,
+      codigosCliente,
+      totalClientes: codigosCliente.length,
+      moneda: values.moneda || null,
+      soloConSaldo: !!values.soloConSaldo,
+      modo,
+      razonSocialCliente
+    };
+
+    const dialogRef = this.dialog.open(ConfirmarEnvioDialogComponent, {
+      data: dialogData,
+      width: '550px',
+      maxWidth: '95vw',
+      autoFocus: false
     });
+
+    dialogRef.afterClosed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(confirmado => {
+        if (confirmado) {
+          this.ejecutarEnvio(codigoEmpresa, fechaCorte, codigosCliente, values);
+        }
+      });
+  }
+
+  private ejecutarEnvio(
+    empresa: CodigoEmpresa,
+    fechaCorte: string,
+    codigosCliente: string[],
+    values: any
+  ): void {
+    this.enviando = true;
+    this.enviosApiService.enviarEstadosCuenta(empresa, {
+      fechaCorte,
+      ruc: null,
+      codigo: null,
+      razonSocial: null,
+      moneda: values.moneda || null,
+      soloConSaldo: !!values.soloConSaldo,
+      codigosCliente
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.errorHandlerService.showSuccess(
+            `${response.mensaje} (ID: ${response.ejecucionId})`
+          );
+          this.clientesSeleccionados.clear();
+          this.enviando = false;
+          this.loadClientes();
+        },
+        error: (error) => {
+          console.error('Error enviando estados de cuenta:', error);
+          this.errorHandlerService.handleError(error);
+          this.enviando = false;
+        }
+      });
+  }
+
+  editarEmailsCliente(cliente: ClienteDto): void {
+    if (!this.empresaSeleccionada) return;
+    const codigoEmpresa = this.empresaMapperService.toCodigoEmpresa(this.empresaSeleccionada.id);
+
+    const dialogData: GestionarEmailsDialogData = {
+      empresa: codigoEmpresa,
+      empresaNombre: this.empresaSeleccionada.razonSocial,
+      codigoCliente: cliente.codigo,
+      razonSocial: cliente.razonSocial
+    };
+
+    this.dialog.open(GestionarEmailsDialogComponent, {
+      data: dialogData,
+      width: '750px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      autoFocus: false
+    });
+  }
+
+  // ============================================
+  // Helpers
+  // ============================================
+
+  getSaldoClass(saldo: number): string {
+    if (saldo > 0) return 'text-red-600 font-bold';
+    if (saldo < 0) return 'text-green-600 font-bold';
+    return 'text-gray-600';
+  }
+
+  formatFechaUltimoEnvio(fecha: string | null): string {
+    if (!fecha) return 'Nunca';
+    return this.dateUtils.formatDate(new Date(fecha));
   }
 }

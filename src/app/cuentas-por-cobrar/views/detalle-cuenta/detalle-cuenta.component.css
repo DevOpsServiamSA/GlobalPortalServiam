@@ -1,0 +1,4 @@
+/* Fix para notch del outline en mat-form-field */
+:host ::ng-deep .mdc-notched-outline__notch {
+  border-right: none;
+}

@@ -1,0 +1,61 @@
+<div class="confirmar-envio-dialog">
+  <h2 mat-dialog-title class="flex items-center gap-2">
+    <mat-icon class="text-serviam-primary">mail</mat-icon>
+    Confirmar envío de estados de cuenta
+  </h2>
+
+  <mat-dialog-content>
+    <p class="text-gray-700 mb-4" *ngIf="data.modo === 'masivo'">
+      Se enviarán los estados de cuenta por correo a los <strong>{{ data.totalClientes }}</strong>
+      cliente{{ data.totalClientes === 1 ? '' : 's' }} seleccionado{{ data.totalClientes === 1 ? '' : 's' }}.
+    </p>
+
+    <p class="text-gray-700 mb-4" *ngIf="data.modo === 'individual'">
+      Se enviará el estado de cuenta por correo al cliente
+      <strong>{{ data.razonSocialCliente }}</strong>.
+    </p>
+
+    <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div>
+          <span class="text-gray-500">Empresa:</span>
+          <span class="font-medium ml-1">{{ data.empresaNombre }}</span>
+        </div>
+        <div>
+          <span class="text-gray-500">Código:</span>
+          <span class="font-medium ml-1">{{ data.empresa }}</span>
+        </div>
+        <div>
+          <span class="text-gray-500">Fecha de corte:</span>
+          <span class="font-medium ml-1">{{ data.fechaCorte }}</span>
+        </div>
+        <div>
+          <span class="text-gray-500">Moneda:</span>
+          <span class="font-medium ml-1">{{ getMonedaLabel() }}</span>
+        </div>
+        <div class="md:col-span-2">
+          <span class="text-gray-500">Solo clientes con saldo:</span>
+          <span class="font-medium ml-1">{{ data.soloConSaldo ? 'Sí' : 'No' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+      <mat-icon class="text-blue-600 flex-shrink-0" style="font-size: 20px; width: 20px; height: 20px;">info</mat-icon>
+      <p class="text-xs text-blue-800 m-0">
+        El procesamiento ocurre en segundo plano. Podrá consultar el estado en la pestaña
+        <strong>Historial de envíos</strong>.
+      </p>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="gap-2">
+    <button mat-button (click)="cancelar()">
+      Cancelar
+    </button>
+    <button mat-raised-button color="primary" (click)="confirmar()">
+      <mat-icon>send</mat-icon>
+      Enviar
+    </button>
+  </mat-dialog-actions>
+</div>

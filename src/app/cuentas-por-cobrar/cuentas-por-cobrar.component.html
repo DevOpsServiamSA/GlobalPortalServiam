@@ -10,19 +10,19 @@
     <app-selector-empresa></app-selector-empresa>
   </div>
 
-  <!-- Navigation Tabs -->
-  <nav class="mb-6">
-    <div class="flex flex-wrap gap-2 border-b border-gray-200">
-      <button
-        *ngFor="let link of navLinks"
-        [routerLink]="link.route"
-        routerLinkActive="border-b-2 border-serviam-primary text-serviam-primary"
-        class="flex items-center gap-2 px-4 py-3 text-gray-600 hover:text-serviam-primary hover:bg-gray-50 transition-colors">
-        <mat-icon>{{ link.icon }}</mat-icon>
-        <span class="font-medium">{{ link.label }}</span>
-      </button>
-    </div>
+  <!-- Tabs de navegación -->
+  <nav mat-tab-nav-bar *ngIf="empresaSeleccionada" [tabPanel]="tabPanel" class="mb-4 bg-white rounded-lg shadow-sm">
+    <a *ngFor="let link of navLinks"
+       mat-tab-link
+       [routerLink]="link.route"
+       routerLinkActive
+       #rla="routerLinkActive"
+       [active]="rla.isActive">
+      <mat-icon class="mr-2">{{ link.icon }}</mat-icon>
+      {{ link.label }}
+    </a>
   </nav>
+  <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
 
   <!-- Router Outlet for Child Views -->
   <div class="view-container">

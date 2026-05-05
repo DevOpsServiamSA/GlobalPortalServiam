@@ -1,5 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { EmpresaContextService } from './services/empresa-context.service';
+import { EmpresaCxC } from './interfaces/cxc.interfaces';
 
 interface NavLink {
   label: string;
@@ -13,28 +17,43 @@ interface NavLink {
   styleUrls: ['./cuentas-por-cobrar.component.css'],
   standalone: false
 })
-export class CuentasPorCobrarComponent {
+export class CuentasPorCobrarComponent implements OnInit, OnDestroy {
   navLinks: NavLink[] = [
     {
-      label: 'Dashboard',
-      route: '/cuentas-por-cobrar/dashboard',
-      icon: 'dashboard'
-    },
-    {
-      label: 'Detalle de Cuenta',
-      route: '/cuentas-por-cobrar/detalle',
+      label: 'Estado de cuenta',
+      route: 'detalle',
       icon: 'receipt_long'
     },
     {
-      label: 'Historial de Pagos',
-      route: '/cuentas-por-cobrar/historial-pagos',
-      icon: 'payments'
+      label: 'Historial de envíos',
+      route: 'historial',
+      icon: 'history'
     }
   ];
 
-  constructor(private router: Router) {}
+  empresaSeleccionada: EmpresaCxC | null = null;
+
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private router: Router,
+    private empresaContextService: EmpresaContextService
+  ) {}
+
+  ngOnInit(): void {
+    this.empresaContextService.empresaSeleccionada$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(empresa => {
+        this.empresaSeleccionada = empresa;
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   isActiveRoute(route: string): boolean {
-    return this.router.url === route;
+    return this.router.url.endsWith(route);
   }
 }

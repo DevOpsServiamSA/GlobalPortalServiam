@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 // Angular Material Modules
 import { MatSelectModule } from '@angular/material/select';
@@ -20,6 +21,8 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 import { CuentasPorCobrarRoutingModule } from './cuentas-por-cobrar-routing.module';
 
@@ -28,11 +31,13 @@ import { CuentasPorCobrarComponent } from './cuentas-por-cobrar.component';
 import { SelectorEmpresaComponent } from './components/selector-empresa/selector-empresa.component';
 import { EstadoCuentaCardComponent } from './components/estado-cuenta-card/estado-cuenta-card.component';
 import { DetalleDeudaDialogComponent } from './components/detalle-deuda-dialog/detalle-deuda-dialog.component';
+import { ConfirmarEnvioDialogComponent } from './components/confirmar-envio-dialog/confirmar-envio-dialog.component';
+import { GestionarEmailsDialogComponent } from './components/gestionar-emails-dialog/gestionar-emails-dialog.component';
+import { DetalleEnvioDialogComponent } from './components/detalle-envio-dialog/detalle-envio-dialog.component';
 
 // Views
-import { DashboardComponent } from './views/dashboard/dashboard.component';
 import { DetalleCuentaComponent } from './views/detalle-cuenta/detalle-cuenta.component';
-import { HistorialPagosComponent } from './views/historial-pagos/historial-pagos.component';
+import { HistorialEnviosComponent } from './views/historial-envios/historial-envios.component';
 
 @NgModule({
   declarations: [
@@ -40,14 +45,17 @@ import { HistorialPagosComponent } from './views/historial-pagos/historial-pagos
     SelectorEmpresaComponent,
     EstadoCuentaCardComponent,
     DetalleDeudaDialogComponent,
-    DashboardComponent,
+    ConfirmarEnvioDialogComponent,
+    GestionarEmailsDialogComponent,
+    DetalleEnvioDialogComponent,
     DetalleCuentaComponent,
-    HistorialPagosComponent
+    HistorialEnviosComponent
   ],
   imports: [
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
+    RouterModule,
     CuentasPorCobrarRoutingModule,
     // Material Modules
     MatSelectModule,
@@ -66,7 +74,9 @@ import { HistorialPagosComponent } from './views/historial-pagos/historial-pagos
     MatNativeDateModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    MatChipsModule
+    MatChipsModule,
+    MatMenuModule,
+    MatCheckboxModule
   ]
 })
 export class CuentasPorCobrarModule { }

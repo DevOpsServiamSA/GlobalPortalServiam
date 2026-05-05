@@ -1,0 +1,10 @@
+.detalle-envio-dialog {
+  min-width: 800px;
+  max-width: 1000px;
+}
+
+.tab-active {
+  border-bottom: 2px solid #00699C;
+  color: #00699C;
+  border-radius: 0;
+}

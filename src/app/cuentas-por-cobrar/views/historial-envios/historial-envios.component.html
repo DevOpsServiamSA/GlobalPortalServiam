@@ -1,0 +1,201 @@
+<div class="historial-pagos-container">
+  <!-- Empty State - No Company Selected -->
+  <div *ngIf="!empresaSeleccionada" class="empty-state text-center py-12">
+    <mat-icon class="text-gray-300 mb-4" style="font-size: 64px; width: 64px; height: 64px;">send</mat-icon>
+    <h2 class="text-xl font-semibold text-gray-700 mb-2">Seleccione una empresa</h2>
+    <p class="text-gray-500">Seleccione una empresa para ver el historial de envíos de estados de cuenta.</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="empresaSeleccionada">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800">Historial de Envíos</h2>
+          <p class="text-sm text-gray-500">{{ empresaSeleccionada.razonSocial }}</p>
+        </div>
+        <button
+          mat-raised-button
+          (click)="toggleFiltros()"
+          color="accent">
+          <mat-icon>filter_list</mat-icon>
+          {{ mostrarFiltros ? 'Ocultar' : 'Mostrar' }} Filtros
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros Panel -->
+    <div *ngIf="mostrarFiltros" class="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <h3 class="text-md font-semibold text-gray-800 mb-4">Filtros de Búsqueda</h3>
+
+      <form [formGroup]="filtrosForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Búsqueda general -->
+        <mat-form-field appearance="outline">
+          <mat-label>Buscar</mat-label>
+          <input matInput formControlName="searchTerm" placeholder="Usuario, RUC, cliente...">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <!-- Fecha Desde -->
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha Desde</mat-label>
+          <input matInput [matDatepicker]="pickerDesde" formControlName="fechaDesde">
+          <mat-datepicker-toggle matSuffix [for]="pickerDesde"></mat-datepicker-toggle>
+          <mat-datepicker #pickerDesde></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Fecha Hasta -->
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha Hasta</mat-label>
+          <input matInput [matDatepicker]="pickerHasta" formControlName="fechaHasta">
+          <mat-datepicker-toggle matSuffix [for]="pickerHasta"></mat-datepicker-toggle>
+          <mat-datepicker #pickerHasta></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Usuario -->
+        <mat-form-field appearance="outline">
+          <mat-label>Usuario</mat-label>
+          <input matInput formControlName="usuario" placeholder="Código de usuario">
+          <mat-icon matPrefix>person</mat-icon>
+        </mat-form-field>
+
+        <!-- Estado -->
+        <mat-form-field appearance="outline">
+          <mat-label>Estado</mat-label>
+          <mat-select formControlName="estado">
+            <mat-option [value]="null">Todos</mat-option>
+            <mat-option *ngFor="let estado of estados" [value]="estado.value">
+              {{ estado.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+
+      <div class="flex gap-2 mt-4">
+        <button mat-raised-button color="primary" (click)="aplicarFiltros()">
+          <mat-icon>search</mat-icon>
+          Buscar
+        </button>
+        <button mat-button (click)="limpiarFiltros()">
+          <mat-icon>clear</mat-icon>
+          Limpiar
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="flex justify-center items-center py-12">
+      <mat-spinner diameter="50"></mat-spinner>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!loading" class="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div *ngIf="envios.length === 0" class="p-8 text-center text-gray-500">
+        <mat-icon class="text-gray-300 mb-2" style="font-size: 48px; width: 48px; height: 48px;">inbox</mat-icon>
+        <p>No se encontraron envíos con los filtros aplicados</p>
+      </div>
+
+      <div *ngIf="envios.length > 0" class="overflow-x-auto">
+        <table mat-table [dataSource]="envios" class="w-full">
+          <!-- Fecha de Inicio -->
+          <ng-container matColumnDef="fechaInicio">
+            <th mat-header-cell *matHeaderCellDef class="font-semibold">Fecha de Envío</th>
+            <td mat-cell *matCellDef="let element">
+              <div class="flex flex-col">
+                <span class="font-medium">{{ formatDate(element.fechaInicio) }}</span>
+                <span class="text-xs text-gray-500">{{ formatRelativeTime(element.fechaInicio) }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Usuario -->
+          <ng-container matColumnDef="usuario">
+            <th mat-header-cell *matHeaderCellDef class="font-semibold">Usuario</th>
+            <td mat-cell *matCellDef="let element">
+              <div class="flex flex-col">
+                <span class="font-medium">{{ element.usuarioNombre || element.usuarioCodigo }}</span>
+                <span class="text-xs text-gray-500" *ngIf="element.usuarioNombre">{{ element.usuarioCodigo }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Fecha de Corte -->
+          <ng-container matColumnDef="fechaCorte">
+            <th mat-header-cell *matHeaderCellDef class="font-semibold">Fecha Corte</th>
+            <td mat-cell *matCellDef="let element">
+              {{ formatDate(element.fechaCorte) }}
+            </td>
+          </ng-container>
+
+          <!-- Total Clientes -->
+          <ng-container matColumnDef="totalClientes">
+            <th mat-header-cell *matHeaderCellDef class="font-semibold">Total Clientes</th>
+            <td mat-cell *matCellDef="let element">
+              <span class="font-bold text-gray-700">{{ element.totalClientes }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Total Enviados -->
+          <ng-container matColumnDef="totalEnviados">
+            <th mat-header-cell *matHeaderCellDef class="font-semibold">Enviados</th>
+            <td mat-cell *matCellDef="let element">
+              <div class="flex items-center gap-1">
+                <mat-icon class="text-green-600" style="font-size: 18px; width: 18px; height: 18px;">check_circle</mat-icon>
+                <span class="text-green-600 font-bold">{{ element.totalEnviados }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Total Errores -->
+          <ng-container matColumnDef="totalErrores">
+            <th mat-header-cell *matHeaderCellDef class="font-semibold">Errores</th>
+            <td mat-cell *matCellDef="let element">
+              <div class="flex items-center gap-1" *ngIf="element.totalErrores > 0">
+                <mat-icon class="text-red-600" style="font-size: 18px; width: 18px; height: 18px;">error</mat-icon>
+                <span class="text-red-600 font-bold">{{ element.totalErrores }}</span>
+              </div>
+              <span class="text-gray-400" *ngIf="element.totalErrores === 0">-</span>
+            </td>
+          </ng-container>
+
+          <!-- Estado -->
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef class="font-semibold">Estado</th>
+            <td mat-cell *matCellDef="let element">
+              <span [ngClass]="getEstadoClass(element.estado)" class="px-2 py-1 rounded-full text-xs font-medium">
+                {{ getEstadoLabel(element.estado) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Acciones -->
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef class="font-semibold">Acciones</th>
+            <td mat-cell *matCellDef="let element">
+              <button
+                mat-icon-button
+                (click)="verDetalles(element)"
+                matTooltip="Ver detalles"
+                class="text-serviam-primary">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50"></tr>
+        </table>
+      </div>
+
+      <!-- Paginator -->
+      <mat-paginator
+        [length]="totalRecords"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 25, 50]"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </div>
+</div>

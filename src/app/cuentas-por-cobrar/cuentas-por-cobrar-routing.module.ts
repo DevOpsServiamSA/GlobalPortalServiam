@@ -5,21 +5,19 @@ import { RoleGuard } from '../core/guards/role.guard';
 
 // Components
 import { CuentasPorCobrarComponent } from './cuentas-por-cobrar.component';
-import { DashboardComponent } from './views/dashboard/dashboard.component';
 import { DetalleCuentaComponent } from './views/detalle-cuenta/detalle-cuenta.component';
-import { HistorialPagosComponent } from './views/historial-pagos/historial-pagos.component';
+import { HistorialEnviosComponent } from './views/historial-envios/historial-envios.component';
 
 const routes: Routes = [
   {
     path: '',
     component: CuentasPorCobrarComponent,
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: ['usuario', 'consultor', 'administrador'] },
+    data: { roles: ['administrador', 'creditos-cobranzas', 'creditos-gestor-correos'] },
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardComponent },
+      { path: '', redirectTo: 'detalle', pathMatch: 'full' },
       { path: 'detalle', component: DetalleCuentaComponent },
-      { path: 'historial-pagos', component: HistorialPagosComponent }
+      { path: 'historial', component: HistorialEnviosComponent }
     ]
   }
 ];
