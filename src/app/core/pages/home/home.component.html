@@ -1,0 +1,42 @@
+<div class="max-w-6xl mx-auto">
+
+  <!-- Banner -->
+  <div class="w-full overflow-hidden rounded-lg shadow-md mb-8">
+    <img src="assets/images/serviam_sa_cover.jpg" alt="Serviam" class="w-full block" />
+  </div>
+
+  <!-- Saludo -->
+  <div class="mb-10 text-center">
+    <h1 class="text-3xl md:text-4xl font-bold text-serviam-primary dark:text-serviam-dark-primary">
+      Bienvenido, {{ (currentUser$ | async)?.usuarioLogin }}
+    </h1>
+    <p class="text-gray-600 dark:text-serviam-dark-text-secondary mt-3 text-lg">
+      Selecciona el módulo al que deseas acceder
+    </p>
+  </div>
+
+  <!-- Cards de módulos -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <ng-container *ngFor="let modulo of modulos">
+      <ng-container *hasRole="modulo.roles">
+        <a [routerLink]="modulo.ruta"
+           class="modulo-card bg-white dark:bg-serviam-dark-surface rounded-lg shadow-md hover:shadow-xl
+                  transition-all duration-300 hover:-translate-y-1 p-8 cursor-pointer
+                  border border-gray-200 dark:border-serviam-dark-border block no-underline">
+          <div class="flex flex-col items-center text-center">
+            <div class="bg-serviam-primary dark:bg-serviam-dark-primary rounded-full p-5 mb-4 shadow-md">
+              <mat-icon class="modulo-icono text-white">{{ modulo.icono }}</mat-icon>
+            </div>
+            <h2 class="text-xl font-semibold text-serviam-dark dark:text-serviam-dark-text mb-2">
+              {{ modulo.titulo }}
+            </h2>
+            <p class="text-gray-600 dark:text-serviam-dark-text-secondary text-sm">
+              {{ modulo.descripcion }}
+            </p>
+          </div>
+        </a>
+      </ng-container>
+    </ng-container>
+  </div>
+
+</div>
