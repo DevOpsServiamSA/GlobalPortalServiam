@@ -1,6 +1,6 @@
 <div class="flex justify-center items-center h-screen bg-theme-bg dark:bg-serviam-dark-bg">
   <div class="bg-theme-surface dark:bg-serviam-dark-card shadow-md p-8 rounded w-96 border border-theme-border dark:border-serviam-dark-border">
-    <h2 class="text-xl font-semibold mb-6 text-center text-serviam-primary dark:text-serviam-dark-primary">Mesa de Ayuda - Login</h2>
+    <h2 class="text-xl font-semibold mb-6 text-center text-serviam-primary dark:text-serviam-dark-primary">Global Portal Serviam</h2>
 
     <!-- Mostrar mensaje de error -->
     <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 rounded">
@@ -49,13 +49,5 @@
         {{ loading ? 'Iniciando sesión...' : 'Ingresar' }}
       </button>
     </form>
-
-    <!-- Información de usuarios de prueba (solo en desarrollo) -->
-    <div class="mt-6 p-3 bg-theme-bg dark:bg-serviam-dark-surface rounded text-xs text-theme-secondary dark:text-serviam-dark-text-secondary border border-theme-border dark:border-serviam-dark-border">
-      <p class="font-semibold mb-1">Usuarios de prueba:</p>
-      <p>• <strong>paranda</strong> (Administrador)</p>
-      <p>• <strong>consultor</strong> (Consultor)</p>
-      <p>• <strong>usuario</strong> (Usuario)</p>
-    </div>
   </div>
 </div>

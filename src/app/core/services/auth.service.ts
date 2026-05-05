@@ -8,7 +8,7 @@ import { LoginRequest, LoginResponse, UserInfo, ValidateTokenResponse } from '..
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-    private readonly API_URL = `${environment.apiTicketera}/auth`;
+    private readonly API_URL = `${environment.apiAuth}`;
     private readonly TOKEN_KEY = 'mda_auth_token';
     private readonly USER_KEY = 'mda_user_info';
 

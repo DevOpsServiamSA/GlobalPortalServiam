@@ -17,15 +17,27 @@ export class AuthInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Obtener token para todas las requests que no sean de login
     const token = this.authService.getToken();
-    const isLoginRequest = req.url.includes('/auth/login');
+    const isLoginRequest = req.url.includes('/security/api/login');
+    const isCxCRequest = req.url.includes('/api/v2/'); // Detectar requests de Cuentas por Cobrar
 
     let authReq = req;
-    
+
     // Agregar token si existe y no es request de login
     if (token && !isLoginRequest) {
-      authReq = req.clone({
-        headers: req.headers.set('Authorization', `Bearer ${token}`)
-      });
+      let headers = req.headers.set('Authorization', `Bearer ${token}`);
+
+      // Si es request de CxC, agregar X-User-Code y X-User-Roles
+      if (isCxCRequest) {
+        const userInfo = this.authService.getCurrentUser();
+        if (userInfo?.codigoEmpleado) {
+          headers = headers.set('X-User-Code', userInfo.codigoEmpleado);
+        }
+        if (userInfo?.roles?.length) {
+          headers = headers.set('X-User-Roles', userInfo.roles.join(','));
+        }
+      }
+
+      authReq = req.clone({ headers });
     }
 
     return next.handle(authReq).pipe(
