@@ -14,6 +14,7 @@ const routes: Routes = [
   {
     path: '',
     component: DashboardComponent,
+    canActivate: [RoleGuard],
     data: { roles: ['usuario', 'consultor', 'administrador'] }
   },
   {

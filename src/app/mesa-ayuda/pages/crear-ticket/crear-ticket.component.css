@@ -61,3 +61,48 @@ textarea.ng-invalid.ng-touched {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Animación de deslizamiento hacia abajo para email warning/form */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.2s ease-out;
+}
+
+/* Estilos personalizados para MatSnackBar */
+::ng-deep .email-warning-snackbar {
+  background-color: #FFF9E6 !important;
+  color: #6B5F00 !important;
+  border-left: 4px solid #F4B942 !important;
+}
+
+::ng-deep .email-warning-snackbar .mat-simple-snack-bar-content {
+  display: flex;
+  align-items: center;
+}
+
+::ng-deep .email-warning-snackbar .mat-button {
+  color: #00699C !important;
+  font-weight: 600;
+}
+
+::ng-deep .email-success-snackbar {
+  background-color: #F0FDF4 !important;
+  color: #065F46 !important;
+  border-left: 4px solid #10B981 !important;
+}
+
+::ng-deep .email-error-snackbar {
+  background-color: #FEF2F2 !important;
+  color: #991B1B !important;
+  border-left: 4px solid #EF4444 !important;
+}

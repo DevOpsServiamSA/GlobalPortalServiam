@@ -80,6 +80,120 @@
         </p>
       </div>
 
+      <!-- Banner de advertencia: Email no configurado -->
+      <div
+        *ngIf="mostrarAdvertenciaEmail && empleadoSeleccionado"
+        class="mt-3 p-4 bg-yellow-50 border-l-4 border-serviam-alert rounded-md animate-slideDown"
+        role="alert"
+        aria-live="polite"
+        aria-atomic="true">
+        <div class="flex items-start gap-3">
+          <!-- Warning Icon -->
+          <svg class="w-5 h-5 text-serviam-alert flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+
+          <!-- Message Content -->
+          <div class="flex-1">
+            <h3 class="text-sm font-semibold text-gray-900">
+              Correo no configurado
+            </h3>
+            <p class="text-sm text-gray-700 mt-1">
+              El empleado <strong>{{empleadoSeleccionado.nombre}}</strong> no tiene correo electrónico registrado.
+              Las notificaciones de este ticket no se enviarán hasta que se actualice.
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3 mt-3">
+              <button
+                type="button"
+                (click)="mostrarFormularioEmail = true"
+                class="text-sm font-medium text-serviam-primary hover:text-serviam-secondary transition-colors">
+                Actualizar correo ahora
+              </button>
+              <button
+                type="button"
+                (click)="ocultarAdvertencia()"
+                class="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
+                Continuar sin correo
+              </button>
+            </div>
+          </div>
+
+          <!-- Close Button -->
+          <button
+            type="button"
+            (click)="ocultarAdvertencia()"
+            aria-label="Cerrar advertencia de correo"
+            class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Formulario inline: Actualizar email -->
+      <div
+        *ngIf="mostrarFormularioEmail && empleadoSeleccionado"
+        id="email-update-form"
+        class="mt-4 p-4 bg-white border border-gray-300 rounded-lg animate-slideDown">
+
+        <!-- Form Header -->
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-gray-900">
+            Actualizar correo electrónico
+          </h3>
+          <button
+            type="button"
+            (click)="cerrarFormularioEmail()"
+            aria-label="Cerrar formulario de correo"
+            class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Email Input -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Correo electrónico <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              [(ngModel)]="nuevoEmail"
+              [ngModelOptions]="{standalone: true}"
+              placeholder="ejemplo@serviam.com"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-serviam-primary focus:border-transparent transition-all"
+              [class.border-red-500]="emailInvalido"
+              aria-label="Ingrese el correo electrónico del empleado">
+            <p *ngIf="emailInvalido" class="text-red-500 text-xs mt-1">
+              Por favor ingrese un correo electrónico válido
+            </p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex justify-end gap-3">
+            <button
+              type="button"
+              (click)="cerrarFormularioEmail()"
+              class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+              Cancelar
+            </button>
+            <button
+              type="button"
+              (click)="actualizarEmail()"
+              [disabled]="guardandoEmail || !nuevoEmail"
+              class="px-4 py-2 bg-serviam-primary hover:bg-serviam-secondary disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium flex items-center gap-2 transition-colors">
+              <div *ngIf="guardandoEmail" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <span>{{ guardandoEmail ? 'Guardando...' : 'Guardar correo' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Usuario Responsable -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">

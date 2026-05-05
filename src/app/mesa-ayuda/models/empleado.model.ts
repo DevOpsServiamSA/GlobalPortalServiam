@@ -11,3 +11,9 @@ export interface ResolutorDto {
   departamento: string;
   puesto: string;
 }
+
+export interface EmailStatusDto {
+  codigoEmpleado: string;
+  email: string | null;
+  tieneCorreo: boolean;
+}

@@ -6,20 +6,22 @@ import { EmpresaService } from '../../services/empresa.service';
 import { CategoriaService } from '../../services/categoria.service';
 import { forkJoin, Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
-import { 
-  LocalidadDto, 
-  Empresa, 
-  ProyectoPorEmpresaDto, 
+import {
+  LocalidadDto,
+  Empresa,
+  ProyectoPorEmpresaDto,
   Categoria,
   PrioridadDto,
   nivelAtencionDto,
   ResolutorDto,
   EmpleadoDto,
-  SlaDto
+  SlaDto,
+  EmailStatusDto
 } from '../../models';
 import { LocalidadService } from '../../services/localidad.service';
 import { PrioridadService } from '../../services/prioridad.service';
 import {EmpleadoService} from '../../services/empleado.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-crear-ticket',
@@ -58,6 +60,21 @@ export class CrearTicketComponent implements OnInit {
   maxFileSize = 10 * 1024 * 1024; // 10MB
   allowedFileTypes = '.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip';
 
+  // Estado de validación de email
+  emailValidationLoading = false;
+  emailStatusChecked = false;
+  empleadoSinCorreo = false;
+  mostrarAdvertenciaEmail = false;
+  mostrarFormularioEmail = false;
+
+  // Estado de actualización de email
+  nuevoEmail = '';
+  guardandoEmail = false;
+  emailInvalido = false;
+
+  // Referencia al empleado seleccionado
+  empleadoSeleccionado: EmpleadoDto | null = null;
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -67,6 +84,7 @@ export class CrearTicketComponent implements OnInit {
     private localidadService: LocalidadService,
     private prioridadService: PrioridadService,
     private empleadoService: EmpleadoService,
+    private snackBar: MatSnackBar
   ) {
     this.ticketForm = this.fb.group({
       empresaId: ['', Validators.required],
@@ -181,9 +199,10 @@ export class CrearTicketComponent implements OnInit {
       }
     });
 
-    // Cuando cambia el usuario afectado, filtrar localidades
-    this.ticketForm.get('usuarioAfectado')?.valueChanges.subscribe(() => {
+    // Cuando cambia el usuario afectado, filtrar localidades Y validar email
+    this.ticketForm.get('usuarioAfectado')?.valueChanges.subscribe((empleado) => {
       this.filtrarLocalidades();
+      this.validarEmailUsuarioAfectado(empleado);
     });
   }
 
@@ -396,5 +415,148 @@ export class CrearTicketComponent implements OnInit {
     if (confirm('¿Está seguro de cancelar la creación del ticket? Se perderán los datos ingresados.')) {
       this.router.navigate(['/mesa-ayuda']);
     }
+  }
+
+  /**
+   * Valida si el usuario afectado tiene correo configurado
+   * Se ejecuta automáticamente al seleccionar un empleado
+   */
+  private validarEmailUsuarioAfectado(empleado: EmpleadoDto | string | null): void {
+    // Reset estados
+    this.emailStatusChecked = false;
+    this.empleadoSinCorreo = false;
+    this.mostrarAdvertenciaEmail = false;
+    this.mostrarFormularioEmail = false;
+
+    // Solo validar si es un objeto EmpleadoDto válido
+    if (!empleado || typeof empleado === 'string') {
+      return;
+    }
+
+    this.empleadoSeleccionado = empleado;
+    this.emailValidationLoading = true;
+
+    this.empleadoService.validarEmailEmpleado(empleado.idEmpleado).subscribe({
+      next: (status: EmailStatusDto) => {
+        this.emailValidationLoading = false;
+        this.emailStatusChecked = true;
+
+        if (!status.tieneCorreo) {
+          this.empleadoSinCorreo = true;
+          this.mostrarAdvertenciaEmail = true;
+          this.mostrarNotificacionEmailFaltante();
+        }
+      },
+      error: (err) => {
+        this.emailValidationLoading = false;
+        console.error('Error validando email:', err);
+        // Silent fail - no bloqueamos el flujo del usuario
+      }
+    });
+  }
+
+  /**
+   * Muestra MatSnackBar cuando el empleado no tiene correo
+   */
+  private mostrarNotificacionEmailFaltante(): void {
+    const snackBarRef = this.snackBar.open(
+      '⚠️ El empleado seleccionado no tiene correo configurado. Actualícelo para recibir notificaciones.',
+      'Actualizar ahora',
+      {
+        duration: 5000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top',
+        panelClass: ['email-warning-snackbar']
+      }
+    );
+
+    // Acción del botón "Actualizar ahora"
+    snackBarRef.onAction().subscribe(() => {
+      this.mostrarFormularioEmail = true;
+      // Scroll suave al formulario
+      setTimeout(() => {
+        document.getElementById('email-update-form')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 100);
+    });
+  }
+
+  /**
+   * Actualiza el correo del empleado seleccionado
+   */
+  actualizarEmail(): void {
+    // Validar formato de email
+    this.emailInvalido = !this.validarFormatoEmail(this.nuevoEmail);
+
+    if (this.emailInvalido || !this.empleadoSeleccionado) {
+      return;
+    }
+
+    this.guardandoEmail = true;
+
+    this.empleadoService.actualizarEmailEmpleado(
+      this.empleadoSeleccionado.idEmpleado,
+      this.nuevoEmail
+    ).subscribe({
+      next: (response) => {
+        this.guardandoEmail = false;
+        this.mostrarAdvertenciaEmail = false;
+        this.mostrarFormularioEmail = false;
+        this.empleadoSinCorreo = false;
+
+        this.snackBar.open(
+          '✓ Correo actualizado exitosamente',
+          'Cerrar',
+          {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top',
+            panelClass: ['email-success-snackbar']
+          }
+        );
+      },
+      error: (err) => {
+        this.guardandoEmail = false;
+        console.error('Error actualizando email:', err);
+
+        this.snackBar.open(
+          '✗ Error al actualizar correo. Intente nuevamente.',
+          'Cerrar',
+          {
+            duration: 5000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top',
+            panelClass: ['email-error-snackbar']
+          }
+        );
+      }
+    });
+  }
+
+  /**
+   * Valida el formato del email con regex
+   */
+  private validarFormatoEmail(email: string): boolean {
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return regex.test(email);
+  }
+
+  /**
+   * Cierra el formulario de email sin guardar
+   */
+  cerrarFormularioEmail(): void {
+    this.mostrarFormularioEmail = false;
+    this.nuevoEmail = '';
+    this.emailInvalido = false;
+  }
+
+  /**
+   * Oculta la advertencia (usuario decide continuar sin correo)
+   */
+  ocultarAdvertencia(): void {
+    this.mostrarAdvertenciaEmail = false;
+    this.mostrarFormularioEmail = false;
   }
 }
