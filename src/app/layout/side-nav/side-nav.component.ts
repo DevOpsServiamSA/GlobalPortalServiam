@@ -14,15 +14,16 @@ export class SideNavComponent {
 
 menuItems: MenuItem[] = [
   {
-    label: 'Dashboard',
-    icon: 'dashboard',
-    route: '/dashboard',
-    tooltip: 'Dashboard'
+    label: 'Inicio',
+    icon: 'home',
+    route: '/home',
+    tooltip: 'Página de inicio'
   },
   {
     label: 'Mesa de ayuda',
     icon: 'support_agent',
     tooltip: 'Mesa de ayuda',
+    requiresRole: ['consultor', 'usuario', 'administrador'],
     children: [
       { label: 'Tickets', icon: 'confirmation_number', route: '/mesa-ayuda' },
       { label: 'Nuevo ticket', icon: 'add_circle', route: '/mesa-ayuda/nuevo' },
@@ -42,12 +43,9 @@ menuItems: MenuItem[] = [
   {
     label: 'Cuentas por Cobrar',
     icon: 'account_balance',
+    route: '/cuentas-por-cobrar/detalle',
     tooltip: 'Gestión de Cuentas por Cobrar',
-    children: [
-      { label: 'Dashboard', icon: 'dashboard', route: '/cuentas-por-cobrar/dashboard' },
-      { label: 'Detalle de Cuenta', icon: 'receipt_long', route: '/cuentas-por-cobrar/detalle' },
-      { label: 'Historial de Pagos', icon: 'payments', route: '/cuentas-por-cobrar/historial-pagos' }
-    ]
+    requiresRole: ['administrador', 'creditos-cobranzas', 'creditos-gestor-correos']
   }
 ];
 

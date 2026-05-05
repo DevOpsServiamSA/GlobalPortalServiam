@@ -18,16 +18,28 @@
 
   <nav class="flex flex-col items-center w-full mt-4 space-y-2 ">
     <ng-container *ngFor="let item of menuItems; let i = index">
-      <!-- Level 1: Item without children -->
-      <a *ngIf="!item.children" [routerLink]="item.route" matTooltip="{{ item.tooltip }}" matTooltipPosition="right"
+      <!-- Level 1: Item without children, without role -->
+      <a *ngIf="!item.children && !item.requiresRole" [routerLink]="item.route" matTooltip="{{ item.tooltip }}" matTooltipPosition="right"
         class="flex items-center space-x-2 w-full px-4 py-2 hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded"
         (click)="onNavigationClick()">
         <mat-icon>{{ item.icon }}</mat-icon>
         <span *ngIf="!collapsed">{{ item.label }}</span>
       </a>
 
-      <!-- Level 1: Item with children -->
-      <div *ngIf="item.children" class="w-full">
+      <!-- Level 1: Item without children, with role -->
+      <ng-container *ngIf="!item.children && item.requiresRole">
+        <ng-container *hasRole="item.requiresRole">
+          <a [routerLink]="item.route" matTooltip="{{ item.tooltip }}" matTooltipPosition="right"
+            class="flex items-center space-x-2 w-full px-4 py-2 hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded"
+            (click)="onNavigationClick()">
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <span *ngIf="!collapsed">{{ item.label }}</span>
+          </a>
+        </ng-container>
+      </ng-container>
+
+      <!-- Level 1: Item with children, without role -->
+      <div *ngIf="item.children && !item.requiresRole" class="w-full">
         <button (click)="toggleSubmenu(i.toString())"
           class="flex items-center justify-between w-full px-4 py-2 hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded"
           matTooltip="{{ item.tooltip }}" matTooltipPosition="right">
@@ -106,6 +118,91 @@
           </ng-container>
         </div>
       </div>
+
+      <!-- Level 1: Item with children, with role -->
+      <ng-container *ngIf="item.children && item.requiresRole">
+        <ng-container *hasRole="item.requiresRole">
+          <div class="w-full">
+            <button (click)="toggleSubmenu(i.toString())"
+              class="flex items-center justify-between w-full px-4 py-2 hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded"
+              matTooltip="{{ item.tooltip }}" matTooltipPosition="right">
+              <div class="flex items-center space-x-2">
+                <mat-icon>{{ item.icon }}</mat-icon>
+                <span *ngIf="!collapsed">{{ item.label }}</span>
+              </div>
+              <mat-icon *ngIf="!collapsed">{{ isSubmenuOpen(i.toString()) ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+
+            <!-- Level 2: Children -->
+            <div *ngIf="isSubmenuOpen(i.toString())" class="transition-all duration-300 space-y-1" [class.hidden]="collapsed">
+              <ng-container *ngFor="let child of item.children; let j = index">
+
+                <!-- Level 2: Child without grandchildren -->
+                <a *ngIf="!child.children" [routerLink]="child.route"
+                  class="flex items-center space-x-2 pl-12 py-2 text-sm text-white dark:text-serviam-dark-text hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded"
+                  (click)="onNavigationClick()">
+                  <mat-icon class="text-sm">{{ child.icon }}</mat-icon>
+                  <span>{{ child.label }}</span>
+                </a>
+
+                <!-- Level 2: Child with grandchildren -->
+                <ng-container *ngIf="child.children">
+                  <!-- WITHOUT role requirement -->
+                  <ng-container *ngIf="!child.requiresRole">
+                    <div class="w-full">
+                      <button (click)="toggleSubmenu(i + '.' + j)"
+                        class="flex items-center justify-between w-full pl-12 py-2 hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded">
+                        <div class="flex items-center space-x-2">
+                          <mat-icon class="text-sm">{{ child.icon }}</mat-icon>
+                          <span class="text-sm">{{ child.label }}</span>
+                        </div>
+                        <mat-icon class="text-sm">{{ isSubmenuOpen(i + '.' + j) ? 'expand_less' : 'expand_more' }}</mat-icon>
+                      </button>
+
+                      <!-- Level 3: Grandchildren -->
+                      <div *ngIf="isSubmenuOpen(i + '.' + j)" class="transition-all duration-300 space-y-1">
+                        <a *ngFor="let grandchild of child.children" [routerLink]="grandchild.route"
+                          class="flex items-center space-x-2 pl-20 py-2 text-sm text-white dark:text-serviam-dark-text hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded"
+                          (click)="onNavigationClick()">
+                          <mat-icon class="text-xs">{{ grandchild.icon }}</mat-icon>
+                          <span>{{ grandchild.label }}</span>
+                        </a>
+                      </div>
+                    </div>
+                  </ng-container>
+
+                  <!-- WITH role requirement -->
+                  <ng-container *ngIf="child.requiresRole">
+                    <ng-container *hasRole="child.requiresRole">
+                      <div class="w-full">
+                        <button (click)="toggleSubmenu(i + '.' + j)"
+                          class="flex items-center justify-between w-full pl-12 py-2 hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded">
+                          <div class="flex items-center space-x-2">
+                            <mat-icon class="text-sm">{{ child.icon }}</mat-icon>
+                            <span class="text-sm">{{ child.label }}</span>
+                          </div>
+                          <mat-icon class="text-sm">{{ isSubmenuOpen(i + '.' + j) ? 'expand_less' : 'expand_more' }}</mat-icon>
+                        </button>
+
+                        <!-- Level 3: Grandchildren -->
+                        <div *ngIf="isSubmenuOpen(i + '.' + j)" class="transition-all duration-300 space-y-1">
+                          <a *ngFor="let grandchild of child.children" [routerLink]="grandchild.route"
+                            class="flex items-center space-x-2 pl-20 py-2 text-sm text-white dark:text-serviam-dark-text hover:bg-serviam-secondary dark:hover:bg-serviam-dark-card transition rounded"
+                            (click)="onNavigationClick()">
+                            <mat-icon class="text-xs">{{ grandchild.icon }}</mat-icon>
+                            <span>{{ grandchild.label }}</span>
+                          </a>
+                        </div>
+                      </div>
+                    </ng-container>
+                  </ng-container>
+                </ng-container>
+
+              </ng-container>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
 
     </ng-container>
   </nav>

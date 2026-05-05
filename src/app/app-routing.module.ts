@@ -11,8 +11,12 @@ const routes: Routes = [
         children: [
             {
                 path: '',
-                redirectTo: '/mesa-ayuda',
+                redirectTo: '/home',
                 pathMatch: 'full'
+            },
+            {
+                path: 'home',
+                loadComponent: () => import('./core/pages/home/home.component').then(m => m.HomeComponent)
             },
             {
                 path: 'mesa-ayuda',
@@ -32,9 +36,9 @@ const routes: Routes = [
         path: 'unauthorized',
         loadComponent: () => import('./core/pages/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)
     },
-    { 
-        path: '**', 
-        redirectTo: '/mesa-ayuda' 
+    {
+        path: '**',
+        redirectTo: '/home'
     }
 ];
 

@@ -4,5 +4,5 @@ export interface MenuItem {
   route?: string;
   children?: MenuItem[];
   tooltip?: string;
-  requiresRole?: string;
+  requiresRole?: string | string[];
 }
