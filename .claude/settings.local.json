@@ -2,7 +2,26 @@
   "permissions": {
     "allow": [
       "Read(//mnt/c/Users/paranda/Desktop/Proyecto Mesa de ayuda - MDA/Backend/MDA.Tickets/MDA.Domain/**)",
-      "Read(//mnt/c/Users/paranda/Desktop/Proyecto Mesa de ayuda - MDA/**)"
+      "Read(//mnt/c/Users/paranda/Desktop/Proyecto Mesa de ayuda - MDA/**)",
+      "Bash(npx tsc:*)",
+      "Bash(git mv:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(ng generate:*)",
+      "Bash(find:*)",
+      "Bash(for file in src/app/cuentas-por-cobrar/components/selector-empresa/selector-empresa.component.ts src/app/cuentas-por-cobrar/components/estado-cuenta-card/estado-cuenta-card.component.ts src/app/cuentas-por-cobrar/components/detalle-deuda-dialog/detalle-deuda-dialog.component.ts src/app/cuentas-por-cobrar/views/dashboard/dashboard.component.ts src/app/cuentas-por-cobrar/views/detalle-cuenta/detalle-cuenta.component.ts src/app/cuentas-por-cobrar/views/historial-pagos/historial-pagos.component.ts)",
+      "Bash(do)",
+      "Bash(if grep -q \"styleUrls:\" \"$file\")",
+      "Bash(! grep -q \"standalone:\" \"$file\")",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(dir:*)",
+      "Bash(npx ng:*)",
+      "PowerShell(Rename-Item *)"
     ],
     "deny": [],
     "ask": []

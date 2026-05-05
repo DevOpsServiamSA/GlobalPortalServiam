@@ -40,6 +40,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/gp/intranet/",
               "budgets": [
                 {
                   "type": "initial",
@@ -63,7 +64,8 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "baseHref": "/"
             }
           },
           "defaultConfiguration": "production"

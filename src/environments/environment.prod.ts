@@ -1,6 +1,7 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://192.168.10.120:5053/api',
-  apiAuthURL: 'http://192.168.10.120:5053/api-gateway',
-  apiTicketera: 'http://192.168.10.120:5053/api'
+  apiUrl: 'https://globalportal.serviam.com.pe:8083/gp/mda-tickets-api/api',
+  apiTicketera: 'https://globalportal.serviam.com.pe:8083/gp/mda-tickets-api/api',
+  apiCuentasPorCobrar: 'https://globalportal.serviam.com.pe:8083/gp/api-gateway/api/v2',
+  apiAuth: 'https://globalportal.serviam.com.pe:8083/gp/api-gateway/security/api'
 };
