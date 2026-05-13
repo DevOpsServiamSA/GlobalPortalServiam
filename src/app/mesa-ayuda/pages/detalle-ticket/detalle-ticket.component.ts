@@ -2,14 +2,36 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { MatDialog } from '@angular/material/dialog';
 import { TicketService } from '../../services/ticket.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { NivelAtencionService } from '../../services/nivelAtencion.service';
 // import { EstadoTicketService } from '../../services/estadoTicket.service'; // Ya no se usa para líneas
 import { CategoriaService } from '../../services/categoria.service';
-import { TicketDetalleDto, AgregarLineaDto, nivelAtencionDto, EstadoTicketDto, EstadoTicketLineaDto, Categoria } from '../../models';
+import {
+  TicketDetalleDto,
+  AgregarLineaDto,
+  nivelAtencionDto,
+  EstadoTicketDto,
+  EstadoTicketLineaDto,
+  Categoria,
+  ProyectoEtapaDto,
+  UpsertEtapaItemRequest,
+  UpsertEtapasProyectoRequest,
+  ProyectoEtapaVersionDto,
+  ProyectoEtapaVersionDetalleDto,
+  FeriadoDto
+} from '../../models';
 import { StyleUtilsService, DateUtilsService } from '../../utils';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
+import { ProyectoEtapaService } from '../../services/proyectoEtapa.service';
+import { CalendarioService } from '../../services/calendario.service';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+  ConfirmDialogResult
+} from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-detalle-ticket',
@@ -52,6 +74,22 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
   categorias2: Categoria[] = [];
   categorias3: Categoria[] = [];
 
+  // Etapas del proyecto (solo aplica si ticket.idProyecto)
+  etapasProyecto: ProyectoEtapaDto[] = [];
+  etapasForm!: FormArray;
+  editandoEtapas = false;
+  loadingEtapas = false;
+  guardandoEtapas = false;
+  feriadosSet = new Set<string>();
+
+  // Versiones históricas de etapas
+  versionesEtapas: ProyectoEtapaVersionDto[] = [];
+  loadingVersiones = false;
+  mostrarVersiones = false;
+  versionSeleccionada: ProyectoEtapaVersionDto | null = null;
+  detalleVersion: ProyectoEtapaVersionDetalleDto[] = [];
+  loadingDetalleVersion = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -60,6 +98,9 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
     private nivelAtencionService: NivelAtencionService,
     // private estadoTicketService: EstadoTicketService, // Ya no se usa para líneas
     private categoriaService: CategoriaService,
+    private proyectoEtapaService: ProyectoEtapaService,
+    private calendarioService: CalendarioService,
+    private dialog: MatDialog,
     private fb: FormBuilder
   ) {
     this.lineaForm = this.fb.group({
@@ -69,8 +110,11 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
       idEstadoLinea: ['', Validators.required],
       idCategoria1: [''],
       idCategoria2: [''],
-      idCategoria3: ['']
+      idCategoria3: [''],
+      idProyectoEtapa: ['']
     });
+
+    this.etapasForm = this.fb.array([]);
 
     this.finalizarLineaForm = this.fb.group({
       tiempoReal: ['', [Validators.required, Validators.min(0.1)]],
@@ -133,6 +177,16 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
         next: (data) => {
           this.ticket = data;
           this.loading = false;
+          this.aplicarValidadorEtapaLinea();
+          if (this.ticket?.idProyecto) {
+            this.cargarEtapasProyecto(this.ticket.idProyecto);
+            this.cargarFeriados();
+            this.cargarVersionesEtapas(this.ticket.idProyecto);
+          } else {
+            this.etapasProyecto = [];
+            this.editandoEtapas = false;
+            this.versionesEtapas = [];
+          }
         },
         error: (err) => {
           console.error('Error al cargar detalle del ticket:', err);
@@ -170,7 +224,8 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
       idEstadoLinea: '',
       idCategoria1: '',
       idCategoria2: '',
-      idCategoria3: ''
+      idCategoria3: '',
+      idProyectoEtapa: ''
     });
     this.categorias2 = [];
     this.categorias3 = [];
@@ -192,7 +247,8 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
         Resolucion: this.lineaForm.value.resolucion || '',
         IdCategoria1: this.lineaForm.value.idCategoria1 ? parseInt(this.lineaForm.value.idCategoria1) : null,
         IdCategoria2: this.lineaForm.value.idCategoria2 ? parseInt(this.lineaForm.value.idCategoria2) : null,
-        IdCategoria3: this.lineaForm.value.idCategoria3 ? parseInt(this.lineaForm.value.idCategoria3) : null
+        IdCategoria3: this.lineaForm.value.idCategoria3 ? parseInt(this.lineaForm.value.idCategoria3) : null,
+        IdProyectoEtapa: this.lineaForm.value.idProyectoEtapa ? parseInt(this.lineaForm.value.idProyectoEtapa) : null
       };
       
       // Agregar el JSON como string en el campo 'linea'
@@ -537,9 +593,8 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
     }
 
     // Verificar estado de las líneas usando la misma lógica que todasLineasFinalizadas()
-    const estadosFinalizados = ['RESUELTO', 'CANCELADO', 'ESCALADO'];
     const lineasNoFinalizadas = this.ticket.lineasTrabajo.filter(linea =>
-      !estadosFinalizados.includes(linea.estado)
+      !this.esLineaFinalizada(linea)
     );
 
     if (lineasNoFinalizadas.length > 0) {
@@ -558,23 +613,31 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    // Estados que indican que una línea está finalizada
-    const estadosFinalizados = ['RESUELTO', 'CANCELADO', 'ESCALADO'];
-    return this.ticket.lineasTrabajo.every(linea =>
-      estadosFinalizados.includes(linea.estado)
-    );
+    return this.ticket.lineasTrabajo.every(linea => this.esLineaFinalizada(linea));
+  }
+
+  // Helper canónico: una línea está finalizada si su ID de estado es 3 (RESUELTO),
+  // 4 (CANCELADO/ANULADO) o 5 (ESCALADO). Acepta también el string del estado por
+  // resiliencia (DB puede traer RESUELTA/RESUELTO o ANULADO/CANCELADO).
+  private esLineaFinalizada(linea: any): boolean {
+    if (!linea) return false;
+    const idsFinalizados = [3, 4, 5];
+    if (typeof linea.idEstadoLinea === 'number' && idsFinalizados.includes(linea.idEstadoLinea)) {
+      return true;
+    }
+    const estadosFinalizadosStr = ['RESUELTO', 'RESUELTA', 'CANCELADO', 'ANULADO', 'ESCALADO'];
+    const estadoNorm = typeof linea.estado === 'string' ? linea.estado.trim().toUpperCase() : '';
+    const nombreEstadoNorm = typeof linea.nombreEstadoLinea === 'string'
+      ? linea.nombreEstadoLinea.trim().toUpperCase()
+      : '';
+    return estadosFinalizadosStr.includes(estadoNorm) || estadosFinalizadosStr.includes(nombreEstadoNorm);
   }
 
   // Métodos para finalizar líneas
   puedefinalizarLinea(linea: any): boolean {
     if (!this.currentUser || !linea) return false;
 
-    // Solo mostrar botón si la línea no está finalizada
-    // Estados que indican que una línea está finalizada
-    const estadosFinalizados = ['RESUELTO', 'CANCELADO', 'ESCALADO'];
-    const estaFinalizada = estadosFinalizados.includes(linea.estado);
-
-    if (estaFinalizada) return false;
+    if (this.esLineaFinalizada(linea)) return false;
 
     // Debe tener permisos (admin o consultor)
     const tieneRolValido = this.isAdmin || this.isConsultor;
@@ -666,5 +729,313 @@ export class DetalleTicketComponent implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  // ============================
+  // Etapas del Proyecto
+  // ============================
+
+  get etapasFormGroups(): FormGroup[] {
+    return this.etapasForm.controls as FormGroup[];
+  }
+
+  private aplicarValidadorEtapaLinea(): void {
+    const ctrl = this.lineaForm.get('idProyectoEtapa');
+    if (!ctrl) return;
+    if (this.ticket?.idProyecto) {
+      ctrl.setValidators([Validators.required]);
+    } else {
+      ctrl.clearValidators();
+      ctrl.setValue('');
+    }
+    ctrl.updateValueAndValidity({ emitEvent: false });
+  }
+
+  cargarEtapasProyecto(idProyecto: string): void {
+    this.loadingEtapas = true;
+    this.proyectoEtapaService.obtenerEtapasPorProyecto(idProyecto)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (etapas) => {
+          this.etapasProyecto = etapas ?? [];
+          this.loadingEtapas = false;
+        },
+        error: (err) => {
+          console.error('Error al cargar etapas del proyecto:', err);
+          this.etapasProyecto = [];
+          this.loadingEtapas = false;
+        }
+      });
+  }
+
+  iniciarEdicionEtapas(): void {
+    if (!this.isAdmin) return;
+
+    // Sembrar desde etapasProyecto. El backend ahora pre-siembra las 5 bases
+    // al crear el proyecto, así que aquí no necesitamos catálogo estático.
+    const fuente = [...this.etapasProyecto].sort((a, b) => a.orden - b.orden);
+
+    this.etapasForm = this.fb.array(
+      fuente.map(et => this.crearGrupoEtapa(et))
+    );
+    this.editandoEtapas = true;
+  }
+
+  private crearGrupoEtapa(et: Partial<ProyectoEtapaDto>): FormGroup {
+    return this.fb.group({
+      idProyectoEtapa: [et.idProyectoEtapa ?? null],
+      idEtapa: [et.idEtapa ?? null],
+      nombre: [
+        et.nombre ?? '',
+        [Validators.required, Validators.maxLength(120)]
+      ],
+      orden: [et.orden ?? (this.etapasForm?.length ? this.etapasForm.length + 1 : 1)],
+      esBase: [et.esBase ?? false],
+      fechaInicioPlaneada: [DateUtilsService.aInputDateString(et.fechaInicioPlaneada)],
+      fechaFinPlaneada: [DateUtilsService.aInputDateString(et.fechaFinPlaneada)],
+      horasPlaneadas: [et.horasPlaneadas ?? null, [Validators.min(0)]],
+      eliminar: [false],
+      cantidadLineas: [et.cantidadLineas ?? 0]
+    });
+  }
+
+  agregarEtapa(): void {
+    if (!this.editandoEtapas) return;
+    const siguienteOrden = this.etapasForm.length + 1;
+    this.etapasForm.push(this.crearGrupoEtapa({
+      idEtapa: null,
+      nombre: '',
+      orden: siguienteOrden,
+      esBase: false,
+      fechaInicioPlaneada: null,
+      fechaFinPlaneada: null,
+      horasPlaneadas: null,
+      cantidadLineas: 0
+    }));
+  }
+
+  marcarEliminarEtapa(idx: number): void {
+    const grp = this.etapasFormGroups[idx];
+    if (!grp) return;
+    const esBase = grp.value.esBase;
+    if (esBase) return;
+    const cantidadLineas = grp.value.cantidadLineas ?? 0;
+    if (cantidadLineas > 0) {
+      alert('No se puede eliminar una etapa que tiene líneas de trabajo asociadas.');
+      return;
+    }
+    const idProyectoEtapa = grp.value.idProyectoEtapa;
+    if (idProyectoEtapa) {
+      // Persistida: marcar como eliminar para que el SP la borre.
+      grp.patchValue({ eliminar: true });
+    } else {
+      // Aún no persistida: simplemente quitarla del FormArray.
+      this.etapasForm.removeAt(idx);
+      this.recalcularOrden();
+    }
+  }
+
+  restaurarEtapa(idx: number): void {
+    const grp = this.etapasFormGroups[idx];
+    if (!grp) return;
+    grp.patchValue({ eliminar: false });
+  }
+
+  onDropEtapa(event: CdkDragDrop<FormGroup[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+    const controles = this.etapasForm.controls;
+    const movido = controles[event.previousIndex];
+    controles.splice(event.previousIndex, 1);
+    controles.splice(event.currentIndex, 0, movido);
+    this.etapasForm.updateValueAndValidity();
+    this.recalcularOrden();
+    this.recalcularFechasSugeridas();
+  }
+
+  private recalcularOrden(): void {
+    this.etapasFormGroups.forEach((grp, idx) => {
+      grp.patchValue({ orden: idx + 1 }, { emitEvent: false });
+    });
+  }
+
+  onFechaFinChange(idx: number): void {
+    this.recalcularFechasSugeridas(idx);
+  }
+
+  /**
+   * Recorre el FormArray ordenado y, si una etapa tiene fechaFin y la siguiente
+   * etapa (no eliminada) tiene fechaInicio vacía, sugiere el siguiente día hábil.
+   * Si `desdeIndice` se pasa, solo recalcula desde ahí en adelante.
+   */
+  private recalcularFechasSugeridas(desdeIndice: number = 0): void {
+    const grupos = this.etapasFormGroups.filter(g => !g.value.eliminar);
+    for (let i = Math.max(0, desdeIndice); i < grupos.length - 1; i++) {
+      const actual = grupos[i];
+      const siguiente = grupos[i + 1];
+      const fechaFin = actual.value.fechaFinPlaneada;
+      const fechaInicioSig = siguiente.value.fechaInicioPlaneada;
+      if (fechaFin && !fechaInicioSig) {
+        const sugerida = DateUtilsService.siguienteDiaHabil(fechaFin, this.feriadosSet);
+        siguiente.patchValue(
+          { fechaInicioPlaneada: DateUtilsService.aInputDateString(sugerida) },
+          { emitEvent: false }
+        );
+      }
+    }
+  }
+
+  cancelarEdicionEtapas(): void {
+    this.editandoEtapas = false;
+    this.etapasForm = this.fb.array([]);
+  }
+
+  guardarEtapas(): void {
+    if (!this.ticket?.idProyecto || !this.isAdmin || this.etapasForm.invalid) return;
+
+    const dialogRef = this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, ConfirmDialogResult>(
+      ConfirmDialogComponent,
+      {
+        data: {
+          titulo: 'Guardar etapas del proyecto',
+          mensaje: '¿Deseas generar una nueva versión histórica de las etapas antes de aplicar los cambios?',
+          textoSi: 'Sí, crear versión',
+          textoNo: 'No, solo actualizar',
+          pedirMotivo: true,
+          motivoLabel: 'Motivo de la versión (opcional)',
+          motivoMaxLength: 255
+        },
+        width: '520px'
+      }
+    );
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(resultado => {
+      if (!resultado) return;
+      this.persistirEtapas(resultado.confirmado, resultado.motivo);
+    });
+  }
+
+  private persistirEtapas(crearVersion: boolean, motivoVersion?: string): void {
+    if (!this.ticket?.idProyecto) return;
+
+    const request: UpsertEtapasProyectoRequest = {
+      etapas: this.etapasFormGroups.map((grp, idx): UpsertEtapaItemRequest => {
+        const v = grp.value;
+        return {
+          idProyectoEtapa: v.idProyectoEtapa ?? null,
+          idEtapa: v.idEtapa ?? null,
+          nombre: (v.nombre ?? '').trim(),
+          orden: idx + 1,
+          esBase: !!v.esBase,
+          fechaInicioPlaneada: v.fechaInicioPlaneada || null,
+          fechaFinPlaneada: v.fechaFinPlaneada || null,
+          horasPlaneadas: v.horasPlaneadas === '' || v.horasPlaneadas === null || v.horasPlaneadas === undefined
+            ? null
+            : parseFloat(v.horasPlaneadas),
+          eliminar: !!v.eliminar
+        };
+      }),
+      crearVersion,
+      motivoVersion: motivoVersion?.trim() || null
+    };
+
+    this.guardandoEtapas = true;
+    this.proyectoEtapaService.guardarEtapasProyecto(this.ticket.idProyecto, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (etapas) => {
+          this.etapasProyecto = etapas ?? [];
+          this.editandoEtapas = false;
+          this.guardandoEtapas = false;
+          if (this.ticket?.idProyecto) {
+            this.cargarVersionesEtapas(this.ticket.idProyecto);
+          }
+        },
+        error: (err) => {
+          console.error('Error al guardar etapas:', err);
+          this.guardandoEtapas = false;
+          alert('Error al guardar las etapas del proyecto: ' + (err.error?.message || err.message));
+        }
+      });
+  }
+
+  // ============================
+  // Feriados
+  // ============================
+
+  private cargarFeriados(): void {
+    this.calendarioService.obtenerFeriados()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (feriados: FeriadoDto[]) => {
+          this.feriadosSet = new Set(
+            (feriados ?? []).map(f => DateUtilsService.aInputDateString(f.fecha))
+          );
+        },
+        error: (err) => {
+          console.error('Error al cargar feriados:', err);
+          this.feriadosSet = new Set();
+        }
+      });
+  }
+
+  // ============================
+  // Versiones históricas
+  // ============================
+
+  cargarVersionesEtapas(idProyecto: string): void {
+    this.loadingVersiones = true;
+    this.proyectoEtapaService.listarVersiones(idProyecto)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (versiones) => {
+          this.versionesEtapas = versiones ?? [];
+          this.loadingVersiones = false;
+        },
+        error: (err) => {
+          console.error('Error al cargar versiones de etapas:', err);
+          this.versionesEtapas = [];
+          this.loadingVersiones = false;
+        }
+      });
+  }
+
+  toggleMostrarVersiones(): void {
+    this.mostrarVersiones = !this.mostrarVersiones;
+    if (!this.mostrarVersiones) {
+      this.versionSeleccionada = null;
+      this.detalleVersion = [];
+    }
+  }
+
+  verDetalleVersion(version: ProyectoEtapaVersionDto): void {
+    if (!this.ticket?.idProyecto) return;
+    this.versionSeleccionada = version;
+    this.detalleVersion = [];
+    this.loadingDetalleVersion = true;
+    this.proyectoEtapaService.obtenerDetalleVersion(this.ticket.idProyecto, version.idVersion)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (detalle) => {
+          this.detalleVersion = detalle ?? [];
+          this.loadingDetalleVersion = false;
+        },
+        error: (err) => {
+          console.error('Error al obtener detalle de versión:', err);
+          this.detalleVersion = [];
+          this.loadingDetalleVersion = false;
+        }
+      });
+  }
+
+  cerrarDetalleVersion(): void {
+    this.versionSeleccionada = null;
+    this.detalleVersion = [];
+  }
+
+  formatearFechaCorta(fecha?: string | null): string {
+    if (!fecha) return '-';
+    const f = new Date(fecha);
+    if (isNaN(f.getTime())) return '-';
+    return DateUtilsService.formatearFecha(f.toISOString());
   }
 }

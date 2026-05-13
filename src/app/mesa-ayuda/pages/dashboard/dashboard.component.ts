@@ -25,6 +25,7 @@ export class DashboardComponent implements OnInit {
   searchTerm = '';
   selectedEstado = 'todos';
   selectedPrioridad = 'todas';
+  selectedTipoTicket: 'NORMAL' | 'PROYECTO' | 'todos' = 'NORMAL';
 
   // Estados disponibles para filtro
   estadosDisponibles: string[] = [];
@@ -97,11 +98,12 @@ export class DashboardComponent implements OnInit {
 
   cargarTicketsCompletos(): void {
     this.loading = true;
-    
+
     // Determinar si se debe filtrar por resolutor
     const idResolutor = this.getIdResolutorForFilter();
-    
-    this.ticketService.obtenerDashboard(idResolutor).subscribe({
+    const tipoTicketParam = this.selectedTipoTicket !== 'todos' ? this.selectedTipoTicket : undefined;
+
+    this.ticketService.obtenerDashboard(idResolutor, tipoTicketParam).subscribe({
       next: (data) => {
         this.tickets = data;
         this.filteredTickets = [...data];
@@ -117,17 +119,18 @@ export class DashboardComponent implements OnInit {
 
   cargarTicketsPaginados(): void {
     this.loading = true;
-    
+
     // Determinar si se debe filtrar por resolutor
     const idResolutor = this.getIdResolutorForFilter();
-    
+
     // Convertir filtros locales a filtros de API
     const apiFilters: DashboardFilters = {
       ...this.currentFilters,
       estado: this.selectedEstado !== 'todos' ? this.selectedEstado : undefined,
       prioridad: this.selectedPrioridad !== 'todas' ? this.selectedPrioridad : undefined,
       busqueda: this.searchTerm || undefined,
-      idResolutor: idResolutor
+      idResolutor: idResolutor,
+      tipoTicket: this.selectedTipoTicket !== 'todos' ? this.selectedTipoTicket : undefined
     };
 
     console.log('API Filters:', apiFilters); // Debug log
@@ -178,7 +181,7 @@ export class DashboardComponent implements OnInit {
         const matchesSearch = ticket.usuarioAfectado.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
                              ticket.nombreEmpresa.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
                              ticket.idTicket.toString().includes(this.searchTerm);
-        
+
         const matchesEstado = this.selectedEstado === 'todos' || ticket.estado === this.selectedEstado;
         const matchesPrioridad = this.selectedPrioridad === 'todas' || ticket.prioridad === this.selectedPrioridad;
 
@@ -197,6 +200,16 @@ export class DashboardComponent implements OnInit {
 
   onPrioridadChange(): void {
     this.aplicarFiltros();
+  }
+
+  onTipoTicketChange(): void {
+    // El tipoTicket se aplica server-side (filtra a nivel SQL), por lo que requiere recargar.
+    if (this.usePagination) {
+      this.currentFilters.page = 1;
+      this.cargarTicketsPaginados();
+    } else {
+      this.cargarTicketsCompletos();
+    }
   }
 
   // Métodos de paginación

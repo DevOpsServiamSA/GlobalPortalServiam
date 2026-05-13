@@ -11,18 +11,19 @@ import { EmpresaService } from '../../services/empresa.service';
 import { PrioridadService } from '../../services/prioridad.service';
 import { LocalidadService } from '../../services/localidad.service';
 import { EmpleadoService } from '../../services/empleado.service';
-import { 
-  TicketDetalleDto, 
-  EditTicketDto, 
-  Categoria, 
-  nivelAtencionDto, 
+import {
+  TicketDetalleDto,
+  EditTicketDto,
+  Categoria,
+  nivelAtencionDto,
   EstadoTicketDto,
   Empresa,
   PrioridadDto,
   LocalidadDto,
   SlaDto,
   EmpleadoDto,
-  ResolutorDto
+  ResolutorDto,
+  ProyectoPorEmpresaDto
 } from '../../models';
 
 @Component({
@@ -56,6 +57,7 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
   localidades: LocalidadDto[] = [];
   empleados: EmpleadoDto[] = [];
   resolutores: ResolutorDto[] = [];
+  proyectos: ProyectoPorEmpresaDto[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -136,6 +138,7 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
           next: (ticket) => {
             this.ticket = ticket;
             this.inicializarFormulario();
+            this.cargarProyectos(ticket.idEmpresa);
             resolve();
           },
           error: (err: any) => {
@@ -253,11 +256,23 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
       idCategoria1: this.ticket.idCategoria1,
       idCategoria2: this.ticket.idCategoria2,
       idCategoria3: this.ticket.idCategoria3,
+      idProyecto: this.ticket.idProyecto,
       idPrioridad: this.ticket.nivelPrioridad,
       idLocalidad: this.ticket.idLocalidad,
       detalleEvento: this.ticket.detalleEvento,
       estado: this.ticket.idEstadoTicket
     });
+
+    // Inmutabilidad: si el ticket ya tiene proyecto asignado, deshabilitar el control
+    if (this.ticket.idProyecto) {
+      this.editForm.get('idProyecto')?.disable({ emitEvent: false });
+    } else {
+      this.editForm.get('idProyecto')?.enable({ emitEvent: false });
+    }
+  }
+
+  get proyectoBloqueado(): boolean {
+    return !!this.ticket?.idProyecto;
   }
 
   onCategoria1Change(): void {
@@ -312,7 +327,9 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
         idTicket: this.ticketId
       };
 
-      // Solo incluir campos que tienen valor
+      // Solo incluir campos que tienen valor.
+      // editForm.value excluye automáticamente los controles deshabilitados,
+      // por lo que idProyecto no se enviará cuando el proyecto está bloqueado.
       const formValue = this.editForm.value;
       Object.keys(formValue).forEach(key => {
         if (formValue[key] && formValue[key] !== '') {
@@ -387,6 +404,36 @@ export class EditarTicketComponent implements OnInit, OnDestroy {
           }
         });
     });
+  }
+
+  private cargarProyectos(empresaId: number): void {
+    this.empresaService.obtenerProyectosPorEmpresa(empresaId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (proyectos) => {
+          this.proyectos = proyectos;
+        },
+        error: (err: any) => {
+          console.error('Error al cargar proyectos:', err);
+          this.proyectos = [];
+        }
+      });
+  }
+
+  onEmpresaChange(): void {
+    const empresaId = this.editForm.get('idEmpresa')?.value;
+    if (empresaId) {
+      this.cargarProyectos(parseInt(empresaId));
+      // No limpiar idProyecto si está bloqueado por inmutabilidad
+      if (!this.proyectoBloqueado) {
+        this.editForm.patchValue({ idProyecto: '' });
+      }
+    } else {
+      this.proyectos = [];
+      if (!this.proyectoBloqueado) {
+        this.editForm.patchValue({ idProyecto: '' });
+      }
+    }
   }
 
   private cargarCategoriasHijas(padreId: number, nivel: number): void {

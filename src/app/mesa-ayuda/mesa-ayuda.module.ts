@@ -7,6 +7,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 import { MesaAyudaRoutingModule } from './mesa-ayuda-routing.module';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
@@ -23,10 +27,12 @@ import { TicketService } from './services/ticket.service';
 import { EmpresaService } from './services/empresa.service';
 import { CategoriaService } from './services/categoria.service';
 import { StyleUtilsService, DateUtilsService } from './utils';
+import { SharedModule } from '../shared/shared.module';
 
 
 import { MantenedorPrioridadesComponent } from './pages/mantenedor-prioridades/mantenedor-prioridades.component';
 import { MantenedorProyectosComponent } from './pages/mantenedor-proyectos/mantenedor-proyectos.component';
+import { MantenedorUsuariosComponent } from './pages/mantenedor-usuarios/mantenedor-usuarios.component';
 
 @NgModule({
   declarations: [
@@ -38,7 +44,8 @@ import { MantenedorProyectosComponent } from './pages/mantenedor-proyectos/mante
     CrearTicketComponent,
     MantenedorCategoriasComponent,
     MantenedorPrioridadesComponent,
-    MantenedorProyectosComponent
+    MantenedorProyectosComponent,
+    MantenedorUsuariosComponent
   ],
   imports: [
     CommonModule,
@@ -53,6 +60,11 @@ import { MantenedorProyectosComponent } from './pages/mantenedor-proyectos/mante
     MatButtonModule,
     MatSelectModule,
     MatSnackBarModule,
+    MatDialogModule,
+    MatExpansionModule,
+    MatTooltipModule,
+    DragDropModule,
+    SharedModule,
     MesaAyudaRoutingModule
   ],
   exports: [

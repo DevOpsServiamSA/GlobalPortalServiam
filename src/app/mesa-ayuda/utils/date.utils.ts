@@ -109,7 +109,7 @@ export class DateUtilsService {
    */
   static estaVencida(fecha: string): boolean {
     if (!fecha) return false;
-    
+
     try {
       const fechaVencimiento = new Date(fecha);
       const ahora = new Date();
@@ -118,5 +118,48 @@ export class DateUtilsService {
       console.warn('Error al verificar vencimiento:', fecha, error);
       return false;
     }
+  }
+
+  /**
+   * Indica si una fecha cae en sábado o domingo.
+   */
+  static esFinDeSemana(fecha: Date): boolean {
+    const dia = fecha.getDay();
+    return dia === 0 || dia === 6;
+  }
+
+  /**
+   * Indica si una fecha está en el set de feriados (formato YYYY-MM-DD).
+   */
+  static esFeriado(fecha: Date, feriados: Set<string>): boolean {
+    return feriados.has(DateUtilsService.aInputDateString(fecha));
+  }
+
+  /**
+   * Devuelve el siguiente día hábil después de la fecha dada (excluye fin de semana y feriados).
+   */
+  static siguienteDiaHabil(fecha: Date | string, feriados: Set<string> = new Set()): Date {
+    const base = typeof fecha === 'string' ? new Date(fecha + 'T00:00:00') : new Date(fecha);
+    base.setHours(0, 0, 0, 0);
+    base.setDate(base.getDate() + 1);
+
+    while (DateUtilsService.esFinDeSemana(base) || DateUtilsService.esFeriado(base, feriados)) {
+      base.setDate(base.getDate() + 1);
+    }
+    return base;
+  }
+
+  /**
+   * Convierte una fecha a string YYYY-MM-DD apto para inputs type=date.
+   * Soporta Date, string ISO o null/undefined.
+   */
+  static aInputDateString(fecha: Date | string | null | undefined): string {
+    if (!fecha) return '';
+    const d = typeof fecha === 'string' ? new Date(fecha) : fecha;
+    if (isNaN(d.getTime())) return '';
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   }
 }

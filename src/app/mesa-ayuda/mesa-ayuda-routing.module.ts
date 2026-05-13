@@ -8,6 +8,7 @@ import { EditarTicketComponent } from './pages/editar-ticket/editar-ticket.compo
 import { MantenedorCategoriasComponent } from './pages/mantenedor-categorias/mantenedor-categorias.component';
 import { MantenedorPrioridadesComponent } from './pages/mantenedor-prioridades/mantenedor-prioridades.component';
 import { MantenedorProyectosComponent } from './pages/mantenedor-proyectos/mantenedor-proyectos.component';
+import { MantenedorUsuariosComponent } from './pages/mantenedor-usuarios/mantenedor-usuarios.component';
 import { RoleGuard } from '../core/guards/role.guard';
 
 const routes: Routes = [
@@ -50,6 +51,12 @@ const routes: Routes = [
   {
     path: 'mantenedor-proyectos',
     component: MantenedorProyectosComponent,
+    canActivate: [RoleGuard],
+    data: { roles: ['administrador'] }
+  },
+  {
+    path: 'mantenedor-usuarios',
+    component: MantenedorUsuariosComponent,
     canActivate: [RoleGuard],
     data: { roles: ['administrador'] }
   }

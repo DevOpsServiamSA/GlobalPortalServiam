@@ -35,7 +35,8 @@ menuItems: MenuItem[] = [
         children: [
           { label: 'Categorías', icon: 'category', route: '/mesa-ayuda/mantenedor-categorias' },
           { label: 'Prioridades', icon: 'flag', route: '/mesa-ayuda/mantenedor-prioridades' },
-          { label: 'Proyectos', icon: 'work', route: '/mesa-ayuda/mantenedor-proyectos' }
+          { label: 'Proyectos', icon: 'work', route: '/mesa-ayuda/mantenedor-proyectos' },
+          { label: 'Usuarios y Roles', icon: 'manage_accounts', route: '/mesa-ayuda/mantenedor-usuarios' }
         ]
       }
     ]

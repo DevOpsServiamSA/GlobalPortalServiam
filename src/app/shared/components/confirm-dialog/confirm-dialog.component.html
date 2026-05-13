@@ -1,0 +1,30 @@
+<div class="confirm-dialog">
+  <h2 mat-dialog-title class="confirm-dialog__title">{{ data.titulo }}</h2>
+
+  <mat-dialog-content class="confirm-dialog__content">
+    <p class="confirm-dialog__message">{{ data.mensaje }}</p>
+
+    <mat-form-field *ngIf="data.pedirMotivo" appearance="outline" class="confirm-dialog__motivo">
+      <mat-label>{{ motivoLabel }}</mat-label>
+      <textarea
+        matInput
+        rows="3"
+        [formControl]="motivoCtrl"
+        [maxlength]="data.motivoMaxLength || 255"></textarea>
+      <mat-hint align="end" *ngIf="data.motivoMaxLength">
+        {{ motivoCtrl.value.length || 0 }}/{{ data.motivoMaxLength }}
+      </mat-hint>
+      <mat-error *ngIf="motivoCtrl.hasError('required')">
+        El motivo es obligatorio.
+      </mat-error>
+      <mat-error *ngIf="motivoCtrl.hasError('maxlength')">
+        Excede el máximo permitido.
+      </mat-error>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="confirm-dialog__actions">
+    <button mat-stroked-button type="button" (click)="cancelar()">{{ textoNo }}</button>
+    <button mat-flat-button color="primary" type="button" (click)="confirmar()">{{ textoSi }}</button>
+  </mat-dialog-actions>
+</div>

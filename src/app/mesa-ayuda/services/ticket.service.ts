@@ -27,23 +27,26 @@ export class TicketService {
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
-  obtenerDashboard(idResolutor?: string): Observable<TicketDashboardDto[]> {
+  obtenerDashboard(idResolutor?: string, tipoTicket?: 'NORMAL' | 'PROYECTO'): Observable<TicketDashboardDto[]> {
     let params = new HttpParams();
-    
+
     if (idResolutor) {
       params = params.set('idResolutor', idResolutor);
     }
-    
+    if (tipoTicket) {
+      params = params.set('tipoTicket', tipoTicket);
+    }
+
     return this.http.get<TicketDashboardDto[]>(`${this.apiUrl}/dashboard`, { params });
   }
 
   obtenerDashboardPaginado(filters: DashboardFilters): Observable<TicketDashboardPaginatedDto> {
     let params = new HttpParams();
-    
+
     // Parámetros de paginación
     params = params.set('page', filters.page.toString());
     params = params.set('pageSize', filters.pageSize.toString());
-    
+
     // Parámetros de ordenamiento
     if (filters.sortBy) {
       params = params.set('sortBy', filters.sortBy);
@@ -51,7 +54,7 @@ export class TicketService {
     if (filters.sortDirection) {
       params = params.set('sortDirection', filters.sortDirection);
     }
-    
+
     // Filtros opcionales
     if (filters.estado) {
       params = params.set('estado', filters.estado);
@@ -77,7 +80,10 @@ export class TicketService {
     if (filters.idResolutor) {
       params = params.set('idResolutor', filters.idResolutor);
     }
-    
+    if (filters.tipoTicket) {
+      params = params.set('tipoTicket', filters.tipoTicket);
+    }
+
     return this.http.get<TicketDashboardPaginatedDto>(`${this.apiUrl}/dashboard/paginated`, { params });
   }
 

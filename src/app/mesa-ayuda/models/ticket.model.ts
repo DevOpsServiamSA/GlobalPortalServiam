@@ -17,6 +17,7 @@ export interface TicketDashboardDto {
   tiempoRecomendadoResolucion: string;
   estado: string;
   fechaCreacion: string;
+  idProyecto?: string;
   proyecto?: string;
 }
 
@@ -34,6 +35,7 @@ export interface TicketDetalleDto {
   idCategoria1?: number;
   idCategoria2?: number;
   idCategoria3?: number;
+  idProyecto?: string;
   proyecto?: string;
   prioridad: string;
   nivelPrioridad: string;
@@ -79,6 +81,10 @@ export interface LineaTrabajoDto {
   fechaCreacion: string;
   fechaModificacion?: string;
   fechaFinalizacion?: string; // NUEVO: Fecha de finalización de la línea
+  // NUEVO: Etapa del proyecto (solo cuando el ticket pertenece a un proyecto)
+  idProyectoEtapa?: number | null;
+  idEtapa?: string | null;
+  nombreEtapa?: string | null;
 }
 
 export interface AgregarLineaDto {
@@ -97,6 +103,7 @@ export interface AgregarLineaDto {
   idCategoria2?: number;
   idCategoria3?: number;
   idResolutor: string; // NUEVO: ID del resolutor asignado
+  idProyectoEtapa?: number; // NUEVO: Etapa del proyecto (obligatorio si el ticket tiene proyecto)
 }
 
 export interface EditTicketDto {
@@ -221,4 +228,5 @@ export interface DashboardFilters extends PaginationRequest {
   fechaDesde?: string;
   fechaHasta?: string;
   busqueda?: string;
+  tipoTicket?: 'NORMAL' | 'PROYECTO';
 }
