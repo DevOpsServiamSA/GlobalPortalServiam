@@ -285,6 +285,146 @@ export class DetalleDrawerComponent implements OnInit, OnChanges {
     }
   }
 
+  // ============================
+  // Eliminar / Cerrar / Reabrir (solo Admin)
+  // ============================
+
+  private esCanalCorreo(canal?: string): boolean {
+    if (!canal) return false;
+    const normalizado = canal.trim().toLowerCase();
+    return normalizado === 'correo' || normalizado === 'email' || normalizado === 'e-mail';
+  }
+
+  private tieneContenido(): boolean {
+    if (!this.ticket) return false;
+    const tieneLineas = this.ticket.lineasTrabajo && this.ticket.lineasTrabajo.length > 0;
+    const tieneAdjuntos = !!this.ticket.adjuntos;
+    return tieneLineas || tieneAdjuntos;
+  }
+
+  private estaCerrado(): boolean {
+    if (!this.ticket) return false;
+    return this.ticket.estado === 'C' || this.ticket.estado === 'CERRADO';
+  }
+
+  private estaFinalizado(): boolean {
+    if (!this.ticket) return false;
+    return this.ticket.estado === 'F' || this.ticket.estado === 'FINALIZADO';
+  }
+
+  /**
+   * Solo admin puede eliminar tickets, solo si canal NO es Correo
+   * y el ticket NO tiene lineas, adjuntos, logs ni etapas.
+   */
+  puedeEliminar(): boolean {
+    if (!this.ticket || !this.isAdmin) return false;
+    if (this.esCanalCorreo(this.ticket.canal)) return false;
+    if (this.tieneContenido()) return false;
+    if (this.estaCerrado() || this.estaFinalizado()) return false;
+    return true;
+  }
+
+  /**
+   * Solo admin puede cerrar tickets. Disponible si el ticket no está ya cerrado/finalizado.
+   */
+  puedeCerrar(): boolean {
+    if (!this.ticket || !this.isAdmin) return false;
+    if (this.estaCerrado() || this.estaFinalizado()) return false;
+    return true;
+  }
+
+  /**
+   * Solo admin puede reabrir tickets cerrados.
+   */
+  puedeReabrir(): boolean {
+    if (!this.ticket || !this.isAdmin) return false;
+    return this.estaCerrado();
+  }
+
+  eliminarTicket(): void {
+    if (!this.ticket || !this.puedeEliminar()) return;
+
+    if (!confirm(`¿Está seguro de ELIMINAR el ticket #${this.ticket.idTicket}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    this.loadingAction = true;
+    this.ticketService.eliminarTicket(this.ticket.idTicket).subscribe({
+      next: () => {
+        this.loadingAction = false;
+        alert('Ticket eliminado exitosamente.');
+        this.ticketUpdated.emit();
+        this.close.emit();
+      },
+      error: (err) => {
+        console.error('Error al eliminar ticket:', err);
+        this.loadingAction = false;
+        if (err.status === 403) {
+          alert('No tienes permisos para eliminar este ticket.');
+        } else if (err.status === 400) {
+          alert(err.error?.message || 'No se puede eliminar tickets del canal Correo.');
+        } else {
+          alert('Error al eliminar ticket: ' + (err.error?.message || err.message));
+        }
+      }
+    });
+  }
+
+  cerrarTicketAdmin(): void {
+    if (!this.ticket || !this.puedeCerrar() || !this.currentUser) return;
+
+    if (!confirm(`¿Está seguro de CERRAR el ticket #${this.ticket.idTicket}?`)) {
+      return;
+    }
+
+    this.loadingAction = true;
+    this.ticketService.cerrarTicket({
+      idTicket: this.ticket.idTicket,
+      idUsuario: this.currentUser.codigoEmpleado
+    }).subscribe({
+      next: () => {
+        this.loadingAction = false;
+        this.cargarDetalleTicket();
+        this.ticketUpdated.emit();
+      },
+      error: (err) => {
+        console.error('Error al cerrar ticket:', err);
+        this.loadingAction = false;
+        if (err.status === 403) {
+          alert('No tienes permisos para cerrar este ticket.');
+        } else {
+          alert('Error al cerrar ticket: ' + (err.error?.message || err.message));
+        }
+      }
+    });
+  }
+
+  reabrirTicket(): void {
+    if (!this.ticket || !this.puedeReabrir()) return;
+
+    if (!confirm(`¿Está seguro de REABRIR el ticket #${this.ticket.idTicket}?`)) {
+      return;
+    }
+
+    this.loadingAction = true;
+    this.ticketService.reabrirTicket(this.ticket.idTicket).subscribe({
+      next: () => {
+        this.loadingAction = false;
+        this.cargarDetalleTicket();
+        this.ticketUpdated.emit();
+      },
+      error: (err) => {
+        console.error('Error al reabrir ticket:', err);
+        this.loadingAction = false;
+        if (err.status === 403) {
+          alert('No tienes permisos para reabrir este ticket.');
+        } else {
+          alert('Error al reabrir ticket: ' + (err.error?.message || err.message));
+        }
+      }
+    });
+  }
+
   // Métodos usando utilidades centralizadas
   getPrioridadClass(prioridad: string): string {
     return StyleUtilsService.getPrioridadClass(prioridad);

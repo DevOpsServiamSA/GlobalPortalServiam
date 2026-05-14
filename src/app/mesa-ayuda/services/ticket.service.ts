@@ -176,6 +176,23 @@ export class TicketService {
   }
 
   /**
+   * Elimina un ticket. Solo administradores. No permitido para tickets de canal Correo
+   * ni para tickets que tengan lineas, adjuntos, logs o etapas.
+   * Endpoint: DELETE /api/tickets/{id}
+   */
+  eliminarTicket(ticketId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${ticketId}`);
+  }
+
+  /**
+   * Reabre un ticket cerrado. Solo administradores.
+   * Endpoint: PUT /api/tickets/{id}/reopen
+   */
+  reabrirTicket(ticketId: number): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${ticketId}/reopen`, {});
+  }
+
+  /**
    * Finaliza una línea estableciendo su tiempo real
    * Esto automáticamente cambia el estado de la línea a FINALIZADO
    */

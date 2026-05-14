@@ -22,6 +22,7 @@ import { LocalidadService } from '../../services/localidad.service';
 import { PrioridadService } from '../../services/prioridad.service';
 import {EmpleadoService} from '../../services/empleado.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-crear-ticket',
@@ -84,7 +85,8 @@ export class CrearTicketComponent implements OnInit {
     private localidadService: LocalidadService,
     private prioridadService: PrioridadService,
     private empleadoService: EmpleadoService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authService: AuthService
   ) {
     this.ticketForm = this.fb.group({
       empresaId: ['', Validators.required],
@@ -283,8 +285,9 @@ export class CrearTicketComponent implements OnInit {
       const usuarioAfectado = this.ticketForm.value.usuarioAfectado?.idEmpleado;
       const usuarioResponsable = this.ticketForm.value.usuarioResponsable?.idEmpleado;
       
+      const currentUser = this.authService.getCurrentUser();
       const ticketData = {
-        idUsuarioCreador: 'S000109',
+        idUsuarioCreador: currentUser?.codigoEmpleado || '',
         idUsuarioAfectado: typeof usuarioAfectado === 'string' ? usuarioAfectado : "",
         idUsuarioResponsable: typeof usuarioResponsable === 'string' ? usuarioResponsable : "",
         idEmpresa: parseInt(this.ticketForm.value.empresaId),
