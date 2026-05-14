@@ -302,14 +302,19 @@ export class DetalleDrawerComponent implements OnInit, OnChanges {
     return tieneLineas || tieneAdjuntos;
   }
 
-  private estaCerrado(): boolean {
+  estaCerrado(): boolean {
     if (!this.ticket) return false;
-    return this.ticket.estado === 'C' || this.ticket.estado === 'CERRADO';
+    const estado = this.ticket.estado?.toLowerCase();
+    return estado === 'c' || estado === 'cerrado' || this.ticket.idEstadoTicket === 'C';
   }
 
-  private estaFinalizado(): boolean {
+  estaFinalizado(): boolean {
     if (!this.ticket) return false;
-    return this.ticket.estado === 'F' || this.ticket.estado === 'FINALIZADO';
+    const estado = this.ticket.estado?.toLowerCase();
+    return estado === 'f'
+      || estado === 'finalizado'
+      || this.ticket.idEstadoTicket === 'F'
+      || !!this.ticket.fechaFinalizacion;
   }
 
   /**
@@ -390,10 +395,11 @@ export class DetalleDrawerComponent implements OnInit, OnChanges {
       error: (err) => {
         console.error('Error al cerrar ticket:', err);
         this.loadingAction = false;
+        const mensaje = err.error?.message || err.error || err.message;
         if (err.status === 403) {
           alert('No tienes permisos para cerrar este ticket.');
         } else {
-          alert('Error al cerrar ticket: ' + (err.error?.message || err.message));
+          alert('Error al cerrar ticket: ' + mensaje);
         }
       }
     });
@@ -579,8 +585,7 @@ export class DetalleDrawerComponent implements OnInit, OnChanges {
     if (!this.ticket || !this.currentUser) return false;
 
     // Verificar que el ticket no esté finalizado/cerrado
-    const estadosNoPermitidos = ['FINALIZADO', 'F', 'CERRADO', 'CANCELADO'];
-    if (estadosNoPermitidos.includes(this.ticket.estado)) {
+    if (this.estaFinalizado() || this.estaCerrado() || this.ticket.estado?.toLowerCase() === 'cancelado') {
       return false;
     }
 
@@ -601,9 +606,9 @@ export class DetalleDrawerComponent implements OnInit, OnChanges {
   puedeEditar(): boolean {
     // Solo administradores pueden editar tickets
     const esAdmin = this.isAdmin;
-    const estadoPermiteEdicion = this.ticket?.estado !== 'FINALIZADO' && 
-                                this.ticket?.estado !== 'CANCELADO' && 
-                                this.ticket?.estado !== 'CERRADO';
+    const estadoPermiteEdicion = !this.estaFinalizado() &&
+                                !this.estaCerrado() &&
+                                this.ticket?.estado?.toLowerCase() !== 'cancelado';
     
     return esAdmin && estadoPermiteEdicion;
   }
@@ -615,7 +620,7 @@ export class DetalleDrawerComponent implements OnInit, OnChanges {
     const tienePermisos = this.isAdmin || this.isConsultor;
 
     // Ticket no debe estar finalizado
-    const noEstaFinalizado = this.ticket.estado !== 'FINALIZADO' && this.ticket.estado !== 'F';
+    const noEstaFinalizado = !this.estaFinalizado();
 
     // Debe tener al menos una línea de trabajo
     const tieneLineas = this.ticket.lineasTrabajo && this.ticket.lineasTrabajo.length > 0;
@@ -657,7 +662,7 @@ export class DetalleDrawerComponent implements OnInit, OnChanges {
     }
 
     // Verificar estado del ticket
-    if (this.ticket.estado === 'FINALIZADO' || this.ticket.estado === 'F') {
+    if (this.estaFinalizado()) {
       return { puedeFinalizarTicket: false, mensaje: 'El ticket ya está finalizado' };
     }
 
